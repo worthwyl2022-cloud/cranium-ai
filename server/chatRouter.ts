@@ -8,6 +8,7 @@ import {
   listMessages,
 } from "./db";
 import { formatGroundingContext, retrieveGrounding, type GroundingSource } from "./grounding";
+import { formatWorldKnowledgeContext, retrieveWorldKnowledge, type WorldKnowledgeSource } from "./worldKnowledge";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 const modelFallbacks = [
@@ -57,6 +58,7 @@ export const chatRouter = router({
         conversationId: z.number().int().positive().optional(),
         model: z.string().min(1).max(80).default("gpt-5-mini"),
         grounded: z.boolean().default(false),
+        research: z.boolean().default(false),
         messages: z
           .array(
             z.object({
@@ -72,13 +74,21 @@ export const chatRouter = router({
       const recentMessages = input.messages.slice(-24);
       const userText = recentMessages.findLast(message => message.role === "user")?.content ?? "";
       const sources: GroundingSource[] = input.grounded ? await retrieveGrounding(userText) : [];
+      const knowledge: WorldKnowledgeSource[] = input.research ? await retrieveWorldKnowledge(userText) : [];
       const groundingContext = formatGroundingContext(sources);
+      const worldKnowledgeContext = formatWorldKnowledgeContext(knowledge);
       const llmMessages: LLMMessage[] = [
         { role: "system", content: systemPrompt },
         ...(groundingContext
           ? [{
               role: "system" as const,
               content: `The user enabled Cranium GitHub grounding. Use the source excerpts below when relevant. Cite sources inline using the repository/file name in backticks. Do not claim a source says something it does not say. Preserve the authority labels.\n\n${groundingContext}`,
+            }]
+          : []),
+        ...(worldKnowledgeContext
+          ? [{
+              role: "system" as const,
+              content: `The user enabled real-world research. Use the current news and reference results below to answer with freshness awareness. Cite sources inline using the source title or domain in brackets. Distinguish reported facts, reference summaries, and your own analysis. If dates conflict, call that out.\n\n${worldKnowledgeContext}`,
             }]
           : []),
         ...recentMessages,
@@ -119,6 +129,8 @@ export const chatRouter = router({
         usage: response.usage ?? null,
         grounded: input.grounded,
         sources,
+        research: input.research,
+        knowledge,
       };
     }),
 });
