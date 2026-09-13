@@ -88,6 +88,8 @@ button, textarea, select { font: inherit; }
 .assistant-bubble strong { color: #f4f0e8; font-weight: 600; }
 .assistant-bubble code { border: 1px solid rgba(255,200,87,.14); border-radius: 5px; background: rgba(255,200,87,.08); padding: 2px 5px; color: #ffe7b5; font-family: 'DM Mono', monospace; font-size: 12px; }
 .user-bubble { border-radius: 16px 4px 16px 16px; background: #2b343c; padding: 12px 15px; color: #eef2ed; }
+.voice-button { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; border: 1px solid rgba(255,200,87,.16); border-radius: 999px; background: rgba(255,200,87,.06); padding: 6px 9px; color: #a6b7ad; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; transition: all .16s ease; }
+.voice-button:hover, .voice-button-active { border-color: rgba(255,200,87,.42); background: rgba(255,200,87,.14); color: #ffe7b5; }
 .source-tray { margin-top: 14px; border-top: 1px solid rgba(255,200,87,.12); padding-top: 11px; }
 .source-tray-label { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; color: #87988d; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
 .source-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow: hidden; border: 1px solid rgba(255,200,87,.14); border-radius: 7px; background: rgba(255,200,87,.05); padding: 5px 7px; color: #a6b7ad; font-family: 'DM Mono', monospace; font-size: 9px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; transition: all .16s ease; }
