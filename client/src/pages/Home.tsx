@@ -53,12 +53,36 @@ const defaultMessages: ChatMessage[] = [
   },
 ];
 
+function ProgressiveResponse({ content }: { content: string }) {
+  const [visibleLength, setVisibleLength] = useState(content.length);
+
+  useEffect(() => {
+    if (content.length <= 1) {
+      setVisibleLength(content.length);
+      return;
+    }
+    setVisibleLength(0);
+    const timer = window.setInterval(() => {
+      setVisibleLength(current => {
+        const next = Math.min(content.length, current + Math.max(2, Math.ceil(content.length / 80)));
+        if (next >= content.length) window.clearInterval(timer);
+        return next;
+      });
+    }, 18);
+    return () => window.clearInterval(timer);
+  }, [content]);
+
+  return <Streamdown>{content.slice(0, visibleLength)}</Streamdown>;
+}
+
 export default function Home() {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
   const [draft, setDraft] = useState("");
   const [model, setModel] = useState("auto");
   const [conversationId, setConversationId] = useState<number | undefined>();
+  const [openConversationId, setOpenConversationId] = useState<number | undefined>();
+  const [historySearch, setHistorySearch] = useState("");
   const [grounded, setGrounded] = useState(false);
   const [researchMode, setResearchMode] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -72,7 +96,9 @@ export default function Home() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsQuery = trpc.chat.models.useQuery();
   const conversationsQuery = trpc.chat.conversations.useQuery(undefined, { enabled: isAuthenticated });
+  const messagesQuery = trpc.chat.messages.useQuery({ conversationId: openConversationId ?? 0 }, { enabled: Boolean(openConversationId && isAuthenticated) });
   const sendMutation = trpc.chat.send.useMutation();
+  const voiceStorageKey = `cranium-voice:${user?.openId ?? "guest"}`;
 
   const models = modelsQuery.data ?? [
     { id: "auto", label: "Auto", provider: "Cranium", note: "Routes by task" },
@@ -81,12 +107,43 @@ export default function Home() {
   ];
   const selectedModel = models.find(item => item.id === model) ?? models[0];
   const recentConversations = conversationsQuery.data ?? [];
+  const filteredConversations = recentConversations.filter(conversation => conversation.title.toLowerCase().includes(historySearch.toLowerCase().trim()));
   const isSending = sendMutation.isPending;
   const statusLabel = isSending ? "Thinking" : researchMode ? "Live research · ready to think" : grounded ? "Grounded · ready to think" : "Ready to think";
 
   useEffect(() => {
     if (models.length && !models.some(item => item.id === model)) setModel(models[0].id);
   }, [model, models]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(voiceStorageKey) ?? "null") as { enabled?: boolean; rate?: number; pitch?: number } | null;
+      if (saved) {
+        if (typeof saved.enabled === "boolean") setVoiceEnabled(saved.enabled);
+        if (typeof saved.rate === "number") setVoiceRate(saved.rate);
+        if (typeof saved.pitch === "number") setVoicePitch(saved.pitch);
+      }
+    } catch {
+      // Browser storage can be unavailable in private or restricted contexts.
+    }
+  }, [voiceStorageKey]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(voiceStorageKey, JSON.stringify({ enabled: voiceEnabled, rate: voiceRate, pitch: voicePitch }));
+    } catch {
+      // Preference persistence is best-effort.
+    }
+  }, [voiceEnabled, voicePitch, voiceRate, voiceStorageKey]);
+
+  useEffect(() => {
+    if (!messagesQuery.data || !openConversationId) return;
+    const loaded: ChatMessage[] = messagesQuery.data.map(message => ({ role: message.role === "user" ? "user" : "assistant", content: message.content, model: message.model ?? undefined }));
+    if (loaded.length) {
+      setMessages(loaded);
+      setConversationId(openConversationId);
+    }
+  }, [messagesQuery.data, openConversationId]);
 
   const sendMessage = async (text: string) => {
     const content = text.trim();
@@ -124,6 +181,7 @@ export default function Home() {
   const newChat = () => {
     setMessages(defaultMessages);
     setConversationId(undefined);
+    setOpenConversationId(undefined);
     setDraft("");
     textareaRef.current?.focus();
   };
@@ -209,10 +267,12 @@ export default function Home() {
             ].map(({ icon: Icon, label, active }) => <button key={label} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${active ? "bg-white/[0.08] text-[#f4f0e8]" : "text-[#8e9a95] hover:bg-white/[0.05] hover:text-[#f4f0e8]"}`}><Icon size={16} className={active ? "text-[#ffc857]" : "text-[#718078]"} /><span>{label}</span>{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#ffc857]" />}</button>)}
           </nav>
           <div className="my-6 h-px bg-white/[0.08]" />
-          <div className="mb-3 flex items-center justify-between px-2"><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Recent chats</span><button className="text-[#728079] transition hover:text-white" onClick={newChat}><Plus size={15} /></button></div>
-          <div className="space-y-1">
-            {recentConversations.slice(0, 6).map(conversation => <button key={conversation.id} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] text-[#9da9a4] transition hover:bg-white/[0.05] hover:text-white"><MessageSquarePlus size={14} className="shrink-0 text-[#68756f]" /><span className="truncate">{conversation.title}</span></button>)}
-            {!recentConversations.length && <div className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-xs leading-relaxed text-[#68756f]">Your signed-in conversations will appear here as you use Cranium.</div>}
+          <div className="mb-3 flex items-center justify-between px-2"><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Conversation history</span><button className="text-[#728079] transition hover:text-white" onClick={newChat} aria-label="New chat"><Plus size={15} /></button></div>
+          <div className="history-search-wrap"><Search size={13} /><input value={historySearch} onChange={event => setHistorySearch(event.target.value)} placeholder="Search chats" aria-label="Search conversation history" /></div>
+          <div className="mt-2 space-y-1">
+            {filteredConversations.slice(0, 8).map(conversation => <button key={conversation.id} onClick={() => setOpenConversationId(conversation.id)} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition hover:bg-white/[0.05] hover:text-white ${openConversationId === conversation.id ? "bg-white/[0.08] text-[#f4f0e8]" : "text-[#9da9a4]"}`}><MessageSquarePlus size={14} className="shrink-0 text-[#68756f]" /><span className="truncate">{conversation.title}</span></button>)}
+            {isAuthenticated && !filteredConversations.length && <div className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-xs leading-relaxed text-[#68756f]">{historySearch ? "No matching chats." : "Your signed-in conversations will appear here as you use Cranium."}</div>}
+            {!isAuthenticated && <div className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-xs leading-relaxed text-[#68756f]">Sign in to save and search conversation history.</div>}
           </div>
           <div className="absolute bottom-5 left-4 right-4 rounded-2xl border border-[#ffc857]/15 bg-[#ffc857]/[0.06] p-4"><div className="mb-3 flex items-center gap-2 text-[#ffc857]"><Cpu size={16} /><span className="font-mono text-[10px] uppercase tracking-[0.18em]">Cranium layer</span></div><p className="text-xs leading-relaxed text-[#9eaca4]">Live research, GitHub grounding, memory, and governed intelligence for WorthWyl products.</p><button className="mt-3 text-xs font-medium text-[#ffe7b5] hover:underline">View foundation →</button></div>
         </aside>
@@ -224,7 +284,7 @@ export default function Home() {
             <div className="mx-auto max-w-[780px]">
               <div className="mb-9 flex items-center gap-4"><div className="hero-orbit"><img src="/manus-storage/Picsart_26-08-02_01-54-52-277_2be9d44f.webp" alt="Cranium flame-brain mark" /></div><div><div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8d9a95]">WorthWyl intelligence workspace</div><div className="mt-1 text-sm text-[#c7cec9]">One place to think, make, and move forward.</div></div></div>
               <div className="space-y-7">
-                {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`message-row flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}><div className={`flex max-w-[92%] gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}><div className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${message.role === "assistant" ? "bg-[#ffc857] text-[#17231d]" : "bg-white/10 text-[#c9d0cb]"}`}>{message.role === "assistant" ? <Sparkles size={14} /> : <UserRound size={14} />}</div><div className={message.role === "user" ? "user-bubble" : "assistant-bubble"}>{message.role === "assistant" ? <Streamdown>{message.content}</Streamdown> : <p className="whitespace-pre-wrap text-[14px] leading-7">{message.content}</p>}{message.error && message.retryText ? <button type="button" className="retry-button" onClick={() => void sendMessage(message.retryText ?? "")} disabled={isSending}><Zap size={12} /> Retry response</button> : null}{message.role === "assistant" && (message.sources?.length || message.knowledge?.length) ? <div className="source-tray"><div className="source-tray-label"><Search size={11} /> {(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0)} live source{(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0) === 1 ? "" : "s"}</div><div className="flex flex-wrap gap-1.5">{message.sources?.map(source => <a key={`${source.repo}-${source.file}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.authority}`} />{source.repo}/{source.file}</a>)}{message.knowledge?.map(source => <a key={`${source.domain}-${source.title}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.kind === "news" ? "news" : "supporting"}`} />{source.domain} · {source.title}</a>)}</div></div> : null}{message.role === "assistant" && <button type="button" className={`voice-button ${speakingIndex === index ? "voice-button-active" : ""}`} onClick={() => speakMessage(message.content, index)} aria-label={speakingIndex === index ? "Stop reading response" : "Read response aloud"} title={speakingIndex === index ? "Stop reading" : "Read response aloud"}><Volume2 size={12} /><span>Read aloud</span></button>}{message.role === "assistant" && message.model && <div className="mt-4 flex items-center gap-2 border-t border-white/[0.08] pt-3 font-mono text-[9px] uppercase tracking-[0.15em] text-[#728079]"><Zap size={11} className="text-[#ffc857]" /> {message.model} <span className="text-white/20">·</span> {message.research ? "Live research response" : message.grounded ? "Grounded response" : "Cranium response"}</div>}</div></div></div>)}
+                {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`message-row flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}><div className={`flex max-w-[92%] gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}><div className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${message.role === "assistant" ? "bg-[#ffc857] text-[#17231d]" : "bg-white/10 text-[#c9d0cb]"}`}>{message.role === "assistant" ? <Sparkles size={14} /> : <UserRound size={14} />}</div><div className={message.role === "user" ? "user-bubble" : "assistant-bubble"}>{message.role === "assistant" ? <ProgressiveResponse content={message.content} /> : <p className="whitespace-pre-wrap text-[14px] leading-7">{message.content}</p>}{message.error && message.retryText ? <button type="button" className="retry-button" onClick={() => void sendMessage(message.retryText ?? "")} disabled={isSending}><Zap size={12} /> Retry response</button> : null}{message.role === "assistant" && (message.sources?.length || message.knowledge?.length) ? <div className="source-tray"><div className="source-tray-label"><Search size={11} /> {(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0)} live source{(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0) === 1 ? "" : "s"}</div><div className="flex flex-wrap gap-1.5">{message.sources?.map(source => <a key={`${source.repo}-${source.file}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.authority}`} />{source.repo}/{source.file}</a>)}{message.knowledge?.map(source => <a key={`${source.domain}-${source.title}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.kind === "news" ? "news" : "supporting"}`} />{source.domain} · {source.title}</a>)}</div></div> : null}{message.role === "assistant" && <button type="button" className={`voice-button ${speakingIndex === index ? "voice-button-active" : ""}`} onClick={() => speakMessage(message.content, index)} aria-label={speakingIndex === index ? "Stop reading response" : "Read response aloud"} title={speakingIndex === index ? "Stop reading" : "Read response aloud"}><Volume2 size={12} /><span>Read aloud</span></button>}{message.role === "assistant" && message.model && <div className="mt-4 flex items-center gap-2 border-t border-white/[0.08] pt-3 font-mono text-[9px] uppercase tracking-[0.15em] text-[#728079]"><Zap size={11} className="text-[#ffc857]" /> {message.model} <span className="text-white/20">·</span> {message.research ? "Live research response" : message.grounded ? "Grounded response" : "Cranium response"}</div>}</div></div></div>)}
                 {isSending && <div className="flex gap-3"><div className="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-[#ffc857] text-[#17231d]"><Sparkles size={14} /></div><div className="assistant-bubble flex items-center gap-1.5"><span className="typing-dot" /><span className="typing-dot delay-1" /><span className="typing-dot delay-2" /></div></div>}
               </div>
               {messages.length === 1 && !isSending && <div className="mt-9 grid gap-2 md:grid-cols-3">{starterPrompts.map((prompt, index) => <button key={prompt} onClick={() => void sendMessage(prompt)} className="group rounded-xl border border-white/10 bg-white/[0.025] p-3.5 text-left text-xs leading-relaxed text-[#9fa9a4] transition hover:-translate-y-0.5 hover:border-[#ffc857]/30 hover:bg-[#ffc857]/[0.06] hover:text-[#eef7f0]"><span className="mb-3 block font-mono text-[9px] text-[#ffc857]">0{index + 1}</span>{prompt}<ArrowUp size={14} className="mt-3 rotate-45 text-[#68756f] transition group-hover:text-[#ffc857]" /></button>)}</div>}
