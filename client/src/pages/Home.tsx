@@ -1,33 +1,187 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { Textarea } from "@/components/ui/textarea";
+import { trpc } from "@/lib/trpc";
+import { Streamdown } from "streamdown";
+import {
+  ArrowUp,
+  BookOpen,
+  ChevronDown,
+  CircleHelp,
+  Code2,
+  Compass,
+  Cpu,
+  FileText,
+  Globe2,
+  LogOut,
+  Menu,
+  MessageSquarePlus,
+  MoreHorizontal,
+  PanelRight,
+  Plus,
+  Search,
+  Settings2,
+  Sparkles,
+  UserRound,
+  Wand2,
+  X,
+  Zap,
+} from "lucide-react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+type ChatMessage = { role: "user" | "assistant"; content: string; model?: string };
+
+const starterPrompts = [
+  "What can you help me build today?",
+  "Explain the Cranium substrate in plain language.",
+  "Help me turn an idea into a WorthWyl product.",
+];
+
+const defaultMessages: ChatMessage[] = [
+  {
+    role: "assistant",
+    content:
+      "Welcome to **Cranium AI**. I’m the general intelligence layer presented by WorthWyl — ready for conversation, research, coding, creative work, and whatever you’re building next.\n\nAsk me anything, or choose a starting point below.",
+    model: "gpt-5-mini",
+  },
+];
+
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, loading, logout } = useAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
+  const [draft, setDraft] = useState("");
+  const [model, setModel] = useState("gpt-5-mini");
+  const [conversationId, setConversationId] = useState<number | undefined>();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [showLayer, setShowLayer] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modelsQuery = trpc.chat.models.useQuery();
+  const conversationsQuery = trpc.chat.conversations.useQuery(undefined, { enabled: isAuthenticated });
+  const sendMutation = trpc.chat.send.useMutation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const models = modelsQuery.data ?? [
+    { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
+    { id: "claude-sonnet-4-6", label: "Claude Sonnet", provider: "Anthropic", note: "Deep reasoning" },
+  ];
+  const selectedModel = models.find(item => item.id === model) ?? models[0];
+  const recentConversations = conversationsQuery.data ?? [];
+  const isSending = sendMutation.isPending;
+  const statusLabel = isSending ? "Thinking" : "Ready to think";
+
+  useEffect(() => {
+    if (models.length && !models.some(item => item.id === model)) setModel(models[0].id);
+  }, [model, models]);
+
+  const sendMessage = async (text: string) => {
+    const content = text.trim();
+    if (!content || isSending) return;
+    const nextMessages = [...messages, { role: "user" as const, content }];
+    setMessages(nextMessages);
+    setDraft("");
+    try {
+      const result = await sendMutation.mutateAsync({
+        conversationId,
+        model,
+        messages: nextMessages.map(({ role, content: messageContent }) => ({ role, content: messageContent })),
+      });
+      setConversationId(result.conversationId);
+      setMessages(current => [...current, { role: "assistant", content: result.content, model: result.model }]);
+      void conversationsQuery.refetch();
+    } catch {
+      setMessages(current => [
+        ...current,
+        { role: "assistant", content: "I hit a connection issue before I could answer. Please try again in a moment." },
+      ]);
+    }
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void sendMessage(draft);
+  };
+
+  const newChat = () => {
+    setMessages(defaultMessages);
+    setConversationId(undefined);
+    setDraft("");
+    textareaRef.current?.focus();
+  };
+
+  const currentMode = useMemo(() => {
+    if (draft.toLowerCase().includes("code")) return "Builder";
+    if (draft.toLowerCase().includes("research")) return "Research";
+    return "General";
+  }, [draft]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="cranium-app min-h-screen overflow-hidden bg-[#101318] text-[#f4f0e8]">
+      <header className="cranium-topbar flex h-[74px] items-center justify-between border-b border-white/10 px-4 md:px-7">
+        <div className="flex items-center gap-3">
+          <button className="icon-button md:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation"><Menu size={19} /></button>
+          <div className="brand-mark brand-mark-image" aria-hidden="true"><img src="/manus-storage/Picsart_26-08-02_01-54-52-277_2be9d44f.webp" alt="" /></div>
+          <div className="leading-none">
+            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#a8b5b0]">WorthWyl presents</div>
+            <div className="mt-1 font-display text-[21px] tracking-[-0.04em] text-[#f8f2e7]">Cranium <span className="text-[#b9efc9]">AI</span></div>
+          </div>
+          <Badge className="ml-2 hidden border border-[#b9efc9]/20 bg-[#b9efc9]/10 font-mono text-[9px] uppercase tracking-[0.15em] text-[#b9efc9] sm:inline-flex">Private beta</Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="hidden items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-[#a8b5b0] transition hover:border-white/20 hover:text-white lg:flex"><Globe2 size={14} /> Global workspace <ChevronDown size={13} /></button>
+          {loading ? <div className="h-8 w-20 animate-pulse rounded-full bg-white/10" /> : isAuthenticated ? (
+            <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-[#e5e0d5] transition hover:bg-white/10" onClick={() => void logout()}>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#b9efc9] text-[10px] font-semibold text-[#16221d]">{(user?.name || "W").slice(0, 1).toUpperCase()}</span>
+              <span className="hidden max-w-[120px] truncate sm:inline">{user?.name || "Account"}</span><LogOut size={13} className="text-[#8c9993]" />
+            </button>
+          ) : <Button onClick={startLogin} className="h-9 rounded-full bg-[#f4f0e8] px-4 text-xs font-semibold text-[#171b1e] hover:bg-white">Sign in</Button>}
+        </div>
+      </header>
+
+      <div className="flex h-[calc(100vh-74px)] min-h-0">
+        <aside className={`cranium-sidebar fixed inset-y-[74px] left-0 z-30 w-[285px] border-r border-white/10 bg-[#12161b] px-4 py-5 transition-transform md:relative md:inset-y-0 md:z-0 md:translate-x-0 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="mb-5 flex items-center justify-between md:hidden"><span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8d9a95]">Navigation</span><button className="icon-button" onClick={() => setMobileNavOpen(false)}><X size={17} /></button></div>
+          <Button onClick={newChat} className="mb-5 h-11 w-full justify-between rounded-xl bg-[#b9efc9] px-4 text-sm font-semibold text-[#13201a] hover:bg-[#d2f8dc]"><span className="flex items-center gap-2"><MessageSquarePlus size={17} /> New chat</span><span className="font-mono text-[10px] opacity-60">⌘ K</span></Button>
+          <div className="mb-3 flex items-center justify-between px-2"><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Workspace</span><button className="text-[#728079] transition hover:text-white"><MoreHorizontal size={15} /></button></div>
+          <nav className="space-y-1">
+            {[
+              { icon: Compass, label: "Explore", active: true },
+              { icon: Code2, label: "Build", active: false },
+              { icon: BookOpen, label: "Knowledge", active: false },
+              { icon: Settings2, label: "Settings", active: false },
+            ].map(({ icon: Icon, label, active }) => <button key={label} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${active ? "bg-white/[0.08] text-[#f4f0e8]" : "text-[#8e9a95] hover:bg-white/[0.05] hover:text-[#f4f0e8]"}`}><Icon size={16} className={active ? "text-[#b9efc9]" : "text-[#718078]"} /><span>{label}</span>{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#b9efc9]" />}</button>)}
+          </nav>
+          <div className="my-6 h-px bg-white/[0.08]" />
+          <div className="mb-3 flex items-center justify-between px-2"><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Recent chats</span><button className="text-[#728079] transition hover:text-white" onClick={newChat}><Plus size={15} /></button></div>
+          <div className="space-y-1">
+            {recentConversations.slice(0, 6).map(conversation => <button key={conversation.id} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] text-[#9da9a4] transition hover:bg-white/[0.05] hover:text-white"><MessageSquarePlus size={14} className="shrink-0 text-[#68756f]" /><span className="truncate">{conversation.title}</span></button>)}
+            {!recentConversations.length && <div className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-xs leading-relaxed text-[#68756f]">Your signed-in conversations will appear here as you use Cranium.</div>}
+          </div>
+          <div className="absolute bottom-5 left-4 right-4 rounded-2xl border border-[#b9efc9]/15 bg-[#b9efc9]/[0.06] p-4"><div className="mb-3 flex items-center gap-2 text-[#b9efc9]"><Cpu size={16} /><span className="font-mono text-[10px] uppercase tracking-[0.18em]">Cranium layer</span></div><p className="text-xs leading-relaxed text-[#9eaca4]">A governed intelligence substrate for WorthWyl products, memory, and ideas.</p><button className="mt-3 text-xs font-medium text-[#d4f8dd] hover:underline">View foundation →</button></div>
+        </aside>
+        {mobileNavOpen && <button className="fixed inset-0 z-20 bg-black/60 md:hidden" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation" />}
+
+        <main className="relative flex min-w-0 flex-1 flex-col bg-[#15191e]">
+          <div className="flex h-[66px] items-center justify-between border-b border-white/[0.08] px-5 md:px-8"><div><div className="flex items-center gap-2"><h1 className="font-display text-[18px] tracking-[-0.03em] text-[#f2ede4]">Cranium AI</h1><span className="h-1.5 w-1.5 rounded-full bg-[#b9efc9] shadow-[0_0_12px_#b9efc9]" /></div><div className="mt-1 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-[#718078]"><span>{statusLabel}</span><span className="text-white/20">/</span><span>{currentMode} mode</span></div></div><div className="flex items-center gap-2"><button className="icon-button" onClick={() => setShowLayer(value => !value)} aria-label="Toggle Cranium layer"><PanelRight size={17} /></button><button className="icon-button" aria-label="Help"><CircleHelp size={17} /></button></div></div>
+          <div className="chat-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-8 md:px-8">
+            <div className="mx-auto max-w-[780px]">
+              <div className="mb-9 flex items-center gap-4"><div className="hero-orbit"><img src="/manus-storage/Picsart_26-08-02_01-54-52-277_2be9d44f.webp" alt="Cranium flame-brain mark" /></div><div><div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8d9a95]">WorthWyl intelligence workspace</div><div className="mt-1 text-sm text-[#c7cec9]">One place to think, make, and move forward.</div></div></div>
+              <div className="space-y-7">
+                {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`message-row flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}><div className={`flex max-w-[92%] gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}><div className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${message.role === "assistant" ? "bg-[#b9efc9] text-[#17231d]" : "bg-white/10 text-[#c9d0cb]"}`}>{message.role === "assistant" ? <Sparkles size={14} /> : <UserRound size={14} />}</div><div className={message.role === "user" ? "user-bubble" : "assistant-bubble"}>{message.role === "assistant" ? <Streamdown>{message.content}</Streamdown> : <p className="whitespace-pre-wrap text-[14px] leading-7">{message.content}</p>}{message.role === "assistant" && message.model && <div className="mt-4 flex items-center gap-2 border-t border-white/[0.08] pt-3 font-mono text-[9px] uppercase tracking-[0.15em] text-[#728079]"><Zap size={11} className="text-[#b9efc9]" /> {message.model} <span className="text-white/20">·</span> Cranium response</div>}</div></div></div>)}
+                {isSending && <div className="flex gap-3"><div className="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-[#b9efc9] text-[#17231d]"><Sparkles size={14} /></div><div className="assistant-bubble flex items-center gap-1.5"><span className="typing-dot" /><span className="typing-dot delay-1" /><span className="typing-dot delay-2" /></div></div>}
+              </div>
+              {messages.length === 1 && !isSending && <div className="mt-9 grid gap-2 md:grid-cols-3">{starterPrompts.map((prompt, index) => <button key={prompt} onClick={() => void sendMessage(prompt)} className="group rounded-xl border border-white/10 bg-white/[0.025] p-3.5 text-left text-xs leading-relaxed text-[#9fa9a4] transition hover:-translate-y-0.5 hover:border-[#b9efc9]/30 hover:bg-[#b9efc9]/[0.06] hover:text-[#eef7f0]"><span className="mb-3 block font-mono text-[9px] text-[#b9efc9]">0{index + 1}</span>{prompt}<ArrowUp size={14} className="mt-3 rotate-45 text-[#68756f] transition group-hover:text-[#b9efc9]" /></button>)}</div>}
+            </div>
+          </div>
+          <div className="composer-wrap px-4 pb-5 md:px-8"><form onSubmit={handleSubmit} className="mx-auto max-w-[780px]"><div className="composer relative rounded-2xl border border-white/10 bg-[#1c2228] p-3 shadow-2xl shadow-black/10"><Textarea ref={textareaRef} value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(draft); } }} placeholder="Message Cranium AI..." className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0" disabled={isSending} /><div className="flex items-center justify-between px-1 pt-2"><div className="flex items-center gap-1"><button type="button" className="composer-action" title="Attach file"><Plus size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Add context"><FileText size={14} /></button><span className="ml-2 hidden font-mono text-[9px] uppercase tracking-[0.12em] text-[#65716b] sm:inline">Shift + Enter for new line</span></div><div className="flex items-center gap-2"><div className="relative"><select aria-label="Select model" value={model} onChange={event => setModel(event.target.value)} className="model-select"><option value={selectedModel?.id}>{selectedModel?.label || "Auto"}</option>{models.filter(item => item.id !== selectedModel?.id).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select><ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#76837c]" /></div><button type="submit" disabled={!draft.trim() || isSending} className="send-button" aria-label="Send message"><ArrowUp size={17} /></button></div></div></div><div className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.17em] text-[#59655f]">Cranium can make mistakes · Check important information</div></form></div>
+        </main>
+
+        {showLayer && <aside className="cranium-inspector hidden w-[274px] shrink-0 border-l border-white/10 bg-[#12161b] px-5 py-6 xl:block"><div className="mb-8 flex items-start justify-between"><div><div className="mb-2 flex items-center gap-2 text-[#b9efc9]"><Cpu size={15} /><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Cranium layer</span></div><h2 className="font-display text-[22px] tracking-[-0.04em]">Make it yours.</h2></div><button className="text-[#718078] hover:text-white" onClick={() => setShowLayer(false)}><X size={15} /></button></div><div className="layer-card mb-5"><div className="mb-4 flex items-center justify-between"><span className="text-xs text-[#dfe5df]">Model routing</span><span className="status-pill"><span /> live</span></div><p className="text-xs leading-relaxed text-[#87948d]">Cranium can work across providers while WorthWyl keeps the experience, memory, and governance coherent.</p><div className="mt-4 space-y-2">{models.slice(0, 3).map(item => <div key={item.id} className="flex items-center justify-between text-[11px]"><span className="text-[#9eaaa4]">{item.provider}</span><span className="font-mono text-[10px] text-[#68756f]">{item.note}</span></div>)}</div></div><div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Modes</div><div className="space-y-2">{[
+          { icon: Sparkles, label: "General", caption: "Conversation & ideas" },
+          { icon: Code2, label: "Builder", caption: "Code & product work" },
+          { icon: BookOpen, label: "Research", caption: "Sources & synthesis" },
+        ].map(({ icon: Icon, label, caption }, index) => <button key={label} className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${index === 0 ? "border-[#b9efc9]/25 bg-[#b9efc9]/[0.07]" : "border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05]"}`}><span className={`flex h-8 w-8 items-center justify-center rounded-lg ${index === 0 ? "bg-[#b9efc9] text-[#17231d]" : "bg-white/[0.07] text-[#a7b3ac]"}`}><Icon size={15} /></span><span><span className="block text-xs text-[#e1e6e1]">{label}</span><span className="mt-0.5 block text-[10px] text-[#728079]">{caption}</span></span></button>)}</div><div className="mt-8 rounded-xl border border-white/[0.07] p-3.5"><div className="mb-2 flex items-center gap-2 text-xs text-[#c8d0ca]"><Wand2 size={14} className="text-[#b9efc9]" /> Substrate-ready</div><p className="text-[11px] leading-relaxed text-[#728079]">GitHub grounding, memory, and governed tools are the next layer of the WorthWyl roadmap.</p></div></aside>}
+      </div>
     </div>
   );
 }
