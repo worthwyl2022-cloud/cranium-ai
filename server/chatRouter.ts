@@ -7,6 +7,7 @@ import {
   listConversations,
   listMessages,
 } from "./db";
+import { formatGroundingContext, retrieveGrounding, type GroundingSource } from "./grounding";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 const modelFallbacks = [
@@ -55,6 +56,7 @@ export const chatRouter = router({
       z.object({
         conversationId: z.number().int().positive().optional(),
         model: z.string().min(1).max(80).default("gpt-5-mini"),
+        grounded: z.boolean().default(false),
         messages: z
           .array(
             z.object({
@@ -68,8 +70,17 @@ export const chatRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const recentMessages = input.messages.slice(-24);
+      const userText = recentMessages.findLast(message => message.role === "user")?.content ?? "";
+      const sources: GroundingSource[] = input.grounded ? await retrieveGrounding(userText) : [];
+      const groundingContext = formatGroundingContext(sources);
       const llmMessages: LLMMessage[] = [
         { role: "system", content: systemPrompt },
+        ...(groundingContext
+          ? [{
+              role: "system" as const,
+              content: `The user enabled Cranium GitHub grounding. Use the source excerpts below when relevant. Cite sources inline using the repository/file name in backticks. Do not claim a source says something it does not say. Preserve the authority labels.\n\n${groundingContext}`,
+            }]
+          : []),
         ...recentMessages,
       ];
 
@@ -86,7 +97,6 @@ export const chatRouter = router({
           ? await getConversation(conversationId, ctx.user.id)
           : undefined;
         if (!existing) {
-          const userText = recentMessages.findLast(message => message.role === "user")?.content ?? "New conversation";
           conversationId = await createConversation(
             ctx.user.id,
             userText.replace(/\s+/g, " ").slice(0, 72) || "New conversation",
@@ -107,7 +117,8 @@ export const chatRouter = router({
         content: assistantContent,
         model: response.model || input.model,
         usage: response.usage ?? null,
-        grounded: false,
+        grounded: input.grounded,
+        sources,
       };
     }),
 });
