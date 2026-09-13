@@ -15,6 +15,7 @@ import {
   Cpu,
   FileText,
   Globe2,
+  Mic,
   LogOut,
   Menu,
   MessageSquarePlus,
@@ -25,6 +26,7 @@ import {
   Settings2,
   Sparkles,
   UserRound,
+  Volume2,
   Wand2,
   X,
   Zap,
@@ -34,6 +36,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 type GroundingSource = { repo: string; file: string; url: string; authority: string; excerpt: string };
 type WorldKnowledgeSource = { kind: "news" | "reference"; title: string; url: string; domain: string; snippet: string; publishedAt?: string };
 type ChatMessage = { role: "user" | "assistant"; content: string; model?: string; grounded?: boolean; research?: boolean; sources?: GroundingSource[]; knowledge?: WorldKnowledgeSource[] };
+type BrowserRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
 
 const starterPrompts = [
   "What can you help me build today?",
@@ -58,6 +61,9 @@ export default function Home() {
   const [conversationId, setConversationId] = useState<number | undefined>();
   const [grounded, setGrounded] = useState(true);
   const [researchMode, setResearchMode] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showLayer, setShowLayer] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -94,6 +100,7 @@ export default function Home() {
       });
       setConversationId(result.conversationId);
       setMessages(current => [...current, { role: "assistant", content: result.content, model: result.model, grounded: result.grounded, research: result.research, sources: result.sources, knowledge: result.knowledge }]);
+      if (voiceEnabled) window.setTimeout(() => speakMessage(result.content, nextMessages.length), 0);
       void conversationsQuery.refetch();
     } catch {
       setMessages(current => [
@@ -120,6 +127,44 @@ export default function Home() {
     if (draft.toLowerCase().includes("research")) return "Research";
     return "General";
   }, [draft]);
+
+  const speakMessage = (text: string, index: number) => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    if (speakingIndex === index) {
+      setSpeakingIndex(null);
+      return;
+    }
+    const spoken = text.replace(/[`*_>#\[\]]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+    const utterance = new SpeechSynthesisUtterance(spoken);
+    utterance.lang = "en-US";
+    utterance.rate = 0.98;
+    utterance.pitch = 0.95;
+    utterance.onend = () => setSpeakingIndex(null);
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleListening = () => {
+    const SpeechRecognition = (window as Window & { SpeechRecognition?: new () => BrowserRecognition; webkitSpeechRecognition?: new () => BrowserRecognition }).SpeechRecognition
+      ?? (window as Window & { webkitSpeechRecognition?: new () => BrowserRecognition }).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = event => {
+      const transcript = Array.from(event.results).map(result => result[0]?.transcript ?? "").join(" ");
+      setDraft(current => `${current} ${transcript}`.trim());
+    };
+    recognition.onend = () => setIsListening(false);
+    setIsListening(true);
+    recognition.start();
+  };
 
   return (
     <div className="cranium-app min-h-screen overflow-hidden bg-[#101318] text-[#f4f0e8]">
@@ -173,13 +218,13 @@ export default function Home() {
             <div className="mx-auto max-w-[780px]">
               <div className="mb-9 flex items-center gap-4"><div className="hero-orbit"><img src="/manus-storage/Picsart_26-08-02_01-54-52-277_2be9d44f.webp" alt="Cranium flame-brain mark" /></div><div><div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8d9a95]">WorthWyl intelligence workspace</div><div className="mt-1 text-sm text-[#c7cec9]">One place to think, make, and move forward.</div></div></div>
               <div className="space-y-7">
-                {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`message-row flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}><div className={`flex max-w-[92%] gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}><div className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${message.role === "assistant" ? "bg-[#b9efc9] text-[#17231d]" : "bg-white/10 text-[#c9d0cb]"}`}>{message.role === "assistant" ? <Sparkles size={14} /> : <UserRound size={14} />}</div><div className={message.role === "user" ? "user-bubble" : "assistant-bubble"}>{message.role === "assistant" ? <Streamdown>{message.content}</Streamdown> : <p className="whitespace-pre-wrap text-[14px] leading-7">{message.content}</p>}{message.role === "assistant" && (message.sources?.length || message.knowledge?.length) ? <div className="source-tray"><div className="source-tray-label"><Search size={11} /> {(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0)} live source{(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0) === 1 ? "" : "s"}</div><div className="flex flex-wrap gap-1.5">{message.sources?.map(source => <a key={`${source.repo}-${source.file}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.authority}`} />{source.repo}/{source.file}</a>)}{message.knowledge?.map(source => <a key={`${source.domain}-${source.title}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.kind === "news" ? "news" : "supporting"}`} />{source.domain} · {source.title}</a>)}</div></div> : null}{message.role === "assistant" && message.model && <div className="mt-4 flex items-center gap-2 border-t border-white/[0.08] pt-3 font-mono text-[9px] uppercase tracking-[0.15em] text-[#728079]"><Zap size={11} className="text-[#b9efc9]" /> {message.model} <span className="text-white/20">·</span> {message.research ? "Live research response" : message.grounded ? "Grounded response" : "Cranium response"}</div>}</div></div></div>)}
+                {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`message-row flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}><div className={`flex max-w-[92%] gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}><div className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${message.role === "assistant" ? "bg-[#b9efc9] text-[#17231d]" : "bg-white/10 text-[#c9d0cb]"}`}>{message.role === "assistant" ? <Sparkles size={14} /> : <UserRound size={14} />}</div><div className={message.role === "user" ? "user-bubble" : "assistant-bubble"}>{message.role === "assistant" ? <Streamdown>{message.content}</Streamdown> : <p className="whitespace-pre-wrap text-[14px] leading-7">{message.content}</p>}{message.role === "assistant" && (message.sources?.length || message.knowledge?.length) ? <div className="source-tray"><div className="source-tray-label"><Search size={11} /> {(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0)} live source{(message.sources?.length ?? 0) + (message.knowledge?.length ?? 0) === 1 ? "" : "s"}</div><div className="flex flex-wrap gap-1.5">{message.sources?.map(source => <a key={`${source.repo}-${source.file}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.authority}`} />{source.repo}/{source.file}</a>)}{message.knowledge?.map(source => <a key={`${source.domain}-${source.title}`} href={source.url} target="_blank" rel="noreferrer" className="source-chip"><span className={`authority-dot ${source.kind === "news" ? "news" : "supporting"}`} />{source.domain} · {source.title}</a>)}</div></div> : null}{message.role === "assistant" && <button type="button" className={`voice-button ${speakingIndex === index ? "voice-button-active" : ""}`} onClick={() => speakMessage(message.content, index)} aria-label="Speak response"><Volume2 size={12} /></button>}{message.role === "assistant" && message.model && <div className="mt-4 flex items-center gap-2 border-t border-white/[0.08] pt-3 font-mono text-[9px] uppercase tracking-[0.15em] text-[#728079]"><Zap size={11} className="text-[#b9efc9]" /> {message.model} <span className="text-white/20">·</span> {message.research ? "Live research response" : message.grounded ? "Grounded response" : "Cranium response"}</div>}</div></div></div>)}
                 {isSending && <div className="flex gap-3"><div className="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-[#b9efc9] text-[#17231d]"><Sparkles size={14} /></div><div className="assistant-bubble flex items-center gap-1.5"><span className="typing-dot" /><span className="typing-dot delay-1" /><span className="typing-dot delay-2" /></div></div>}
               </div>
               {messages.length === 1 && !isSending && <div className="mt-9 grid gap-2 md:grid-cols-3">{starterPrompts.map((prompt, index) => <button key={prompt} onClick={() => void sendMessage(prompt)} className="group rounded-xl border border-white/10 bg-white/[0.025] p-3.5 text-left text-xs leading-relaxed text-[#9fa9a4] transition hover:-translate-y-0.5 hover:border-[#b9efc9]/30 hover:bg-[#b9efc9]/[0.06] hover:text-[#eef7f0]"><span className="mb-3 block font-mono text-[9px] text-[#b9efc9]">0{index + 1}</span>{prompt}<ArrowUp size={14} className="mt-3 rotate-45 text-[#68756f] transition group-hover:text-[#b9efc9]" /></button>)}</div>}
             </div>
           </div>
-          <div className="composer-wrap px-4 pb-5 md:px-8"><form onSubmit={handleSubmit} className="mx-auto max-w-[780px]"><div className="composer relative rounded-2xl border border-white/10 bg-[#1c2228] p-3 shadow-2xl shadow-black/10"><Textarea ref={textareaRef} value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(draft); } }} placeholder="Message Cranium AI..." className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0" disabled={isSending} /><div className="flex items-center justify-between px-1 pt-2"><div className="flex items-center gap-1"><button type="button" className={`composer-action ${researchMode ? "composer-action-active" : ""}`} title="Toggle live research" onClick={() => setResearchMode(value => !value)}><Globe2 size={15} /></button><button type="button" className={`composer-action ${grounded ? "composer-action-active" : ""}`} title="Toggle GitHub grounding" onClick={() => setGrounded(value => !value)}><Search size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Attach file"><Plus size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Add context"><FileText size={14} /></button><span className="ml-2 hidden font-mono text-[9px] uppercase tracking-[0.12em] text-[#65716b] sm:inline">Shift + Enter for new line</span></div><div className="flex items-center gap-2"><div className="relative"><select aria-label="Select model" value={model} onChange={event => setModel(event.target.value)} className="model-select"><option value={selectedModel?.id}>{selectedModel?.label || "Auto"}</option>{models.filter(item => item.id !== selectedModel?.id).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select><ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#76837c]" /></div><button type="submit" disabled={!draft.trim() || isSending} className="send-button" aria-label="Send message"><ArrowUp size={17} /></button></div></div></div><div className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.17em] text-[#59655f]">{researchMode ? "Live research on" : grounded ? "GitHub grounding on" : "Cranium can make mistakes · Check important information"}</div></form></div>
+          <div className="composer-wrap px-4 pb-5 md:px-8"><form onSubmit={handleSubmit} className="mx-auto max-w-[780px]"><div className="composer relative rounded-2xl border border-white/10 bg-[#1c2228] p-3 shadow-2xl shadow-black/10"><Textarea ref={textareaRef} value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(draft); } }} placeholder="Message Cranium AI..." className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0" disabled={isSending} /><div className="flex items-center justify-between px-1 pt-2"><div className="flex items-center gap-1"><button type="button" className={`composer-action ${voiceEnabled ? "composer-action-active" : ""}`} title="Toggle voice replies" onClick={() => setVoiceEnabled(value => !value)}><Volume2 size={15} /></button><button type="button" className={`composer-action ${isListening ? "composer-action-active" : ""}`} title="Speak to Cranium" onClick={toggleListening}><Mic size={15} /></button><button type="button" className={`composer-action ${researchMode ? "composer-action-active" : ""}`} title="Toggle live research" onClick={() => setResearchMode(value => !value)}><Globe2 size={15} /></button><button type="button" className={`composer-action ${grounded ? "composer-action-active" : ""}`} title="Toggle GitHub grounding" onClick={() => setGrounded(value => !value)}><Search size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Attach file"><Plus size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Add context"><FileText size={14} /></button><span className="ml-2 hidden font-mono text-[9px] uppercase tracking-[0.12em] text-[#65716b] sm:inline">Shift + Enter for new line</span></div><div className="flex items-center gap-2"><div className="relative"><select aria-label="Select model" value={model} onChange={event => setModel(event.target.value)} className="model-select"><option value={selectedModel?.id}>{selectedModel?.label || "Auto"}</option>{models.filter(item => item.id !== selectedModel?.id).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select><ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#76837c]" /></div><button type="submit" disabled={!draft.trim() || isSending} className="send-button" aria-label="Send message"><ArrowUp size={17} /></button></div></div></div><div className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.17em] text-[#59655f]">{researchMode ? "Live research on" : grounded ? "GitHub grounding on" : "Cranium can make mistakes · Check important information"}</div></form></div>
         </main>
 
         {showLayer && <aside className="cranium-inspector hidden w-[274px] shrink-0 border-l border-white/10 bg-[#12161b] px-5 py-6 xl:block"><div className="mb-8 flex items-start justify-between"><div><div className="mb-2 flex items-center gap-2 text-[#b9efc9]"><Cpu size={15} /><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Cranium layer</span></div><h2 className="font-display text-[22px] tracking-[-0.04em]">Make it yours.</h2></div><button className="text-[#718078] hover:text-white" onClick={() => setShowLayer(false)}><X size={15} /></button></div><div className="layer-card mb-5"><div className="mb-4 flex items-center justify-between"><span className="text-xs text-[#dfe5df]">Intelligence routing</span><span className="status-pill"><span /> live</span></div><p className="text-xs leading-relaxed text-[#87948d]">Cranium combines live news, reference knowledge, GitHub substrate, and model routing while preserving source provenance.</p><div className="mt-4 space-y-2">{models.slice(0, 3).map(item => <div key={item.id} className="flex items-center justify-between text-[11px]"><span className="text-[#9eaaa4]">{item.provider}</span><span className="font-mono text-[10px] text-[#68756f]">{item.note}</span></div>)}</div></div><div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Modes</div><div className="space-y-2">{[
