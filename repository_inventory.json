@@ -1,0 +1,182 @@
+[1;38m[[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Acquisition-grade governance and delivery template for Cranium ecosystem projects."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-acquisition-template"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-acquisition-template"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:56:44Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Historical Cranium ecosystem archive, provenance, brand assets, and constitutional records."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-archive"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [36mnull[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-archive"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:56:46Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"CanonLane and semantic contract documentation for the Cranium substrate ecosystem."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-canonlane-contracts"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"Python"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-canonlane-contracts"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:40:17Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium cognitive data-model and research surface; supporting surface."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-cognitive-core"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"Python"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-cognitive-core"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:56:49Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Technical and acquisition-facing documentation for the Cranium substrate ecosystem."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-content-hub"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [36mnull[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-content-hub"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:56:50Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium application and cognitive-layer integration; supporting surface."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/Cranium-Core-"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"Kotlin"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"Cranium-Core-"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:49:35Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium diligence, evidence review, and acquisition verification workbench."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-diligence-workbench"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-diligence-workbench"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:49:33Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Hardened Cranium Core reference implementation; supporting surface."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-hardened-core"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-hardened-core"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:58:27Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium Substrate v1 — Governed Cognitive Substrate kernel. Authority can be acquired only through Cranium."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-kernel"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-kernel"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:49:31Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium operator OS and metacognitive demonstration surface; supporting surface."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-operator-os"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-operator-os"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:49:34Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Acquisition-facing Cranium ecosystem portfolio and case studies."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-portfolio"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [36mnull[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-portfolio"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:31:55Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Provider adapters and multi-AI integration surface; non-authority."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-provider-integrations"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"JavaScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-provider-integrations"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:56:56Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium substrate reference and epistemic governance layer; supporting surface."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-substrate-reference"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"Python"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-substrate-reference"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:58:28Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Research and simulation surface for Cranium substrate behavior; non-canonical."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-substrate-simulator"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-substrate-simulator"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:56:59Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Cranium Synapse bounded attestation, evidence, and trust-ring integration."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-synapse"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-synapse"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:58:09Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"Integrated Cranium operator and verification platform; supporting surface."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/cranium-ultra-platform"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"cranium-ultra-platform"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:49:36Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"WorthWyl creative and media production surface; non-canonical ecosystem client."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/worthwyl-forge"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"worthwyl-forge"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T22:57:03Z"[m
+[1;38m}[m[1;38m,[m
+[1;38m{[m
+[1;34m"archived"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"default_branch"[m[1;38m:[m [32m"main"[m[1;38m,[m
+[1;34m"description"[m[1;38m:[m [32m"WorthWyl application and media surface; non-canonical ecosystem client."[m[1;38m,[m
+[1;34m"html_url"[m[1;38m:[m [32m"https://github.com/worthwyl2022-cloud/worthwyl-game-changer"[m[1;38m,[m
+[1;34m"language"[m[1;38m:[m [32m"TypeScript"[m[1;38m,[m
+[1;34m"name"[m[1;38m:[m [32m"worthwyl-game-changer"[m[1;38m,[m
+[1;34m"private"[m[1;38m:[m [33mfalse[m[1;38m,[m
+[1;34m"updated_at"[m[1;38m:[m [32m"2026-09-12T23:49:38Z"[m
+[1;38m}[m
+[1;38m][m
