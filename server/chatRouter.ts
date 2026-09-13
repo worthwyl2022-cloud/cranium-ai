@@ -18,6 +18,14 @@ const modelFallbacks = [
   { id: "gpt-5", label: "GPT-5", provider: "OpenAI", note: "Advanced coding" },
 ];
 
+const chooseModel = (requestedModel: string, userText: string) => {
+  if (requestedModel !== "auto") return requestedModel;
+  const normalized = userText.toLowerCase();
+  if (/\b(code|bug|debug|typescript|javascript|python|sql|api|repository|github)\b/.test(normalized)) return "gpt-5";
+  if (/\b(research|sources|最新|news|current|today|evidence)\b/.test(normalized)) return "claude-sonnet-4-6";
+  return "gpt-5-mini";
+};
+
 const textFromContent = (content: unknown) => {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
@@ -40,7 +48,8 @@ export const chatRouter = router({
       const { data } = await listLLMModels();
       const available = new Set(data.map(model => model.id));
       const discovered = modelFallbacks.filter(model => available.has(model.id));
-      return discovered.length ? discovered : modelFallbacks;
+      const availableModels = discovered.length ? discovered : modelFallbacks;
+      return [{ id: "auto", label: "Auto", provider: "Cranium", note: "Routes by task" }, ...availableModels];
     } catch {
       return modelFallbacks;
     }
@@ -77,6 +86,7 @@ export const chatRouter = router({
       const knowledge: WorldKnowledgeSource[] = input.research ? await retrieveWorldKnowledge(userText) : [];
       const groundingContext = formatGroundingContext(sources);
       const worldKnowledgeContext = formatWorldKnowledgeContext(knowledge);
+      const selectedModel = chooseModel(input.model, userText);
       const llmMessages: LLMMessage[] = [
         { role: "system", content: systemPrompt },
         ...(groundingContext
@@ -95,7 +105,7 @@ export const chatRouter = router({
       ];
 
       const response = await invokeLLM({
-        model: input.model,
+        model: selectedModel,
         messages: llmMessages,
       });
       const assistantContent = textFromContent(response.choices?.[0]?.message?.content);
@@ -110,7 +120,7 @@ export const chatRouter = router({
           conversationId = await createConversation(
             ctx.user.id,
             userText.replace(/\s+/g, " ").slice(0, 72) || "New conversation",
-            input.model
+            selectedModel
           );
         }
         if (conversationId) {
@@ -125,7 +135,7 @@ export const chatRouter = router({
       return {
         conversationId,
         content: assistantContent,
-        model: response.model || input.model,
+        model: response.model || selectedModel,
         usage: response.usage ?? null,
         grounded: input.grounded,
         sources,

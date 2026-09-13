@@ -30,8 +30,8 @@ describe("chat router", () => {
 
   it("exposes discovered model choices for the selector", async () => {
     const result = await appRouter.createCaller(createContext()).chat.models();
-    expect(result.map(model => model.id)).toEqual(["gpt-5-mini", "claude-sonnet-4-6"]);
-    expect(result[0]).toMatchObject({ label: "GPT-5 mini", provider: "OpenAI" });
+    expect(result.map(model => model.id)).toEqual(["auto", "gpt-5-mini", "claude-sonnet-4-6"]);
+    expect(result[0]).toMatchObject({ label: "Auto", provider: "Cranium" });
   });
 
   it("returns an assistant response without requiring a signed-in user", async () => {
@@ -47,5 +47,14 @@ describe("chat router", () => {
       conversationId: undefined,
     });
     expect(result.usage?.total_tokens).toBe(18);
+  });
+
+  it("routes Auto coding requests to the advanced coding model", async () => {
+    const result = await appRouter.createCaller(createContext()).chat.send({
+      model: "auto",
+      messages: [{ role: "user", content: "Debug this TypeScript API error." }],
+    });
+
+    expect(result.model).toBe("gpt-5");
   });
 });
