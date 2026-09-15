@@ -4,7 +4,7 @@
 
 ## 1. Purpose and disclosure
 
-The acquiring party acknowledges that Cranium includes a constitutional governance layer, Prime Directives, a monthly diagnostics and evolution cycle, an owner control plane, and cryptographic verification mechanisms. These are intentional product and safety features, not undocumented restrictions, hidden access mechanisms, or defects. This exhibit contains **no private signing key and no usable secret key material**. The number `508022573` is an approver identifier only; it is not a cryptographic key.
+The acquiring party acknowledges that Cranium includes a constitutional governance layer, Prime Directives, a monthly diagnostics and evolution cycle, an owner control plane, and cryptographic verification mechanisms. These are intentional product and safety features, not undocumented restrictions, hidden access mechanisms, or defects.
 
 The acquiring party acknowledges that these mechanisms are part of the Cranium architecture and are material to its identity, provenance, governance, safety, continuity, and operation.
 
@@ -20,13 +20,13 @@ The protection period begins on the acquisition closing date and continues for f
 
 During the protection period, the sole protected human approver for major constitutional or course-changing modifications is:
 
-**William (Wyl) Mathes — approver identifier 508022573**
+**William (Wyl) Mathes — 508022573**
 
 The protected approval authority is personal to the identified approver and may not be reassigned, substituted, delegated, or replaced without the approver’s explicit signed authorization.
 
 ## 4. Signing key purpose
 
-The private signing key controlled by William (Wyl) Mathes is used to authenticate owner-control commands and approvals. The private key value is never included in this exhibit, the repository, the application, or any acquisition deliverable. It may be used to authorize or initiate documented actions such as pause, safe mode, restoration of a signed version, credential revocation, external-action freeze, approval or rejection of a major change, key rotation, and audit export.
+The signing key controlled by William (Wyl) Mathes is used to authenticate owner-control commands and approvals. It may be used to authorize or initiate documented actions such as pause, safe mode, restoration of a signed version, credential revocation, external-action freeze, approval or rejection of a major change, key rotation, and audit export.
 
 The signing key does not constitute an undocumented backdoor. It is a disclosed root-of-authority control required for continuity, emergency recovery, constitutional protection, and attribution of major changes.
 
