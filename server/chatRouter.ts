@@ -10,6 +10,7 @@ import {
 import { formatGroundingContext, retrieveGrounding, type GroundingSource } from "./grounding";
 import { formatWorldKnowledgeContext, retrieveWorldKnowledge, type WorldKnowledgeSource } from "./worldKnowledge";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { storageGetSignedUrl, storagePut } from "./storage";
 
 const modelFallbacks = [
   { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
@@ -44,6 +45,22 @@ Brand personality: sound warm, articulate, composed, and quietly formidable. Whe
 Use the exact brand spellings in written responses: WorthWyl and Cranium. Be direct and useful, explain uncertainty plainly, and use markdown when it improves clarity.`;
 
 export const chatRouter = router({
+  upload: protectedProcedure
+    .input(z.object({
+      filename: z.string().min(1).max(180),
+      contentType: z.string().min(1).max(120),
+      size: z.number().int().positive().max(35 * 1024 * 1024),
+      dataBase64: z.string().min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const data = Buffer.from(input.dataBase64, "base64");
+      if (data.byteLength !== input.size) throw new Error("Upload size verification failed");
+      const safeName = input.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const stored = await storagePut(`cranium-uploads/${ctx.user.id}/${safeName}`, data, input.contentType);
+      const signedUrl = await storageGetSignedUrl(stored.key);
+      return { ...stored, url: signedUrl, filename: input.filename, contentType: input.contentType, size: input.size };
+    }),
+
   models: publicProcedure.query(async () => {
     try {
       const { data } = await listLLMModels();
@@ -74,6 +91,12 @@ export const chatRouter = router({
             z.object({
               role: z.enum(["user", "assistant"]),
               content: z.string().min(1).max(30000),
+              attachment: z.object({
+                url: z.string().url(),
+                filename: z.string().min(1).max(180),
+                contentType: z.string().min(1).max(120),
+                size: z.number().int().positive(),
+              }).optional(),
             })
           )
           .min(1)
@@ -102,7 +125,15 @@ export const chatRouter = router({
               content: `The user enabled real-world research. Use the current news and reference results below to answer with freshness awareness. Cite sources inline using the source title or domain in brackets. Distinguish reported facts, reference summaries, and your own analysis. If dates conflict, call that out.\n\n${worldKnowledgeContext}`,
             }]
           : []),
-        ...recentMessages,
+        ...recentMessages.map(message => message.attachment
+          ? {
+              role: message.role,
+              content: [
+                { type: "text" as const, text: message.content },
+                { type: "file_url" as const, file_url: { url: message.attachment.url, mime_type: message.attachment.contentType } },
+              ],
+            }
+          : message),
       ];
 
       const response = await invokeLLM({
