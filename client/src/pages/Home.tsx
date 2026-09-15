@@ -107,6 +107,7 @@ export default function Home() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modelsQuery = trpc.chat.models.useQuery();
+  const selfModelQuery = trpc.chat.selfModel.useQuery();
   const conversationsQuery = trpc.chat.conversations.useQuery(undefined, { enabled: isAuthenticated });
   const messagesQuery = trpc.chat.messages.useQuery({ conversationId: openConversationId ?? 0 }, { enabled: Boolean(openConversationId && isAuthenticated) });
   const sendMutation = trpc.chat.send.useMutation();
@@ -364,7 +365,7 @@ export default function Home() {
           { icon: Sparkles, label: "General", caption: "Conversation & ideas" },
           { icon: Code2, label: "Builder", caption: "Code & product work" },
           { icon: BookOpen, label: "Research", caption: "Sources & synthesis" },
-        ].map(({ icon: Icon, label, caption }, index) => <button key={label} className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${index === 0 ? "border-[#ffc857]/25 bg-[#ffc857]/[0.07]" : "border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05]"}`}><span className={`flex h-8 w-8 items-center justify-center rounded-lg ${index === 0 ? "bg-[#ffc857] text-[#17231d]" : "bg-white/[0.07] text-[#a7b3ac]"}`}><Icon size={15} /></span><span><span className="block text-xs text-[#e1e6e1]">{label}</span><span className="mt-0.5 block text-[10px] text-[#728079]">{caption}</span></span></button>)}</div><div className="mt-8 rounded-xl border border-white/[0.07] p-3.5"><div className="mb-2 flex items-center gap-2 text-xs text-[#c8d0ca]"><Wand2 size={14} className="text-[#ffc857]" /> Substrate-ready</div><p className="text-[11px] leading-relaxed text-[#728079]">GitHub grounding, memory, and governed tools are the next layer of the WorthWyl roadmap.</p></div></aside>}
+        ].map(({ icon: Icon, label, caption }, index) => <button key={label} className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${index === 0 ? "border-[#ffc857]/25 bg-[#ffc857]/[0.07]" : "border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05]"}`}><span className={`flex h-8 w-8 items-center justify-center rounded-lg ${index === 0 ? "bg-[#ffc857] text-[#17231d]" : "bg-white/[0.07] text-[#a7b3ac]"}`}><Icon size={15} /></span><span><span className="block text-xs text-[#e1e6e1]">{label}</span><span className="mt-0.5 block text-[10px] text-[#728079]">{caption}</span></span></button>)}</div><div className="mt-8 rounded-xl border border-[#ffc857]/15 bg-[#ffc857]/[0.04] p-3.5"><div className="mb-2 flex items-center justify-between text-xs text-[#c8d0ca]"><span className="flex items-center gap-2"><Wand2 size={14} className="text-[#ffc857]" /> Bounded agency</span><span className="status-pill"><span /> {selfModelQuery.data?.coma.mode ?? "loading"}</span></div><p className="text-[11px] leading-relaxed text-[#9eaca4]">Cranium can choose its response strategy, challenge weak premises, ask sharper questions, and surface uncertainty—without bypassing its governing boundaries.</p><div className="mt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-[#68756f]">Reflective · evidence-aware · fail-closed</div></div></aside>}
       </div>
     </div>
   );
