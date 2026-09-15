@@ -35,7 +35,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type GroundingSource = { repo: string; file: string; url: string; authority: string; excerpt: string };
 type WorldKnowledgeSource = { kind: "news" | "reference"; title: string; url: string; domain: string; snippet: string; publishedAt?: string };
-type ChatMessage = { role: "user" | "assistant"; content: string; model?: string; grounded?: boolean; research?: boolean; sources?: GroundingSource[]; knowledge?: WorldKnowledgeSource[]; error?: boolean; retryText?: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; model?: string; grounded?: boolean; research?: boolean; sources?: GroundingSource[]; knowledge?: WorldKnowledgeSource[]; substrate?: { governed: boolean; authority: string; core?: { transactionId: string; journalSequence: number; decision: string }; synapse?: { riskClass: string; confidence: number; disposition: string } }; error?: boolean; retryText?: string };
 type BrowserRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
 
 const starterPrompts = [
@@ -160,7 +160,7 @@ export default function Home() {
         messages: nextMessages.map(({ role, content: messageContent }) => ({ role, content: messageContent })),
       });
       setConversationId(result.conversationId);
-      setMessages(current => [...current, { role: "assistant", content: result.content, model: result.model, grounded: result.grounded, research: result.research, sources: result.sources, knowledge: result.knowledge }]);
+      setMessages(current => [...current, { role: "assistant", content: result.content, model: result.model, grounded: result.grounded, research: result.research, sources: result.sources, knowledge: result.knowledge, substrate: result.substrate }]);
       if (voiceEnabled) window.setTimeout(() => speakMessage(result.content, nextMessages.length), 0);
       void conversationsQuery.refetch();
       } catch (error) {

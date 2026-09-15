@@ -10,6 +10,7 @@ import {
 import { formatGroundingContext, retrieveGrounding, type GroundingSource } from "./grounding";
 import { formatWorldKnowledgeContext, retrieveWorldKnowledge, type WorldKnowledgeSource } from "./worldKnowledge";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { submitThroughSubstrate } from "./substrate";
 
 const modelFallbacks = [
   { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
@@ -110,6 +111,11 @@ export const chatRouter = router({
       });
       const assistantContent = textFromContent(response.choices?.[0]?.message?.content);
       if (!assistantContent) throw new Error("Cranium AI returned an empty response");
+      const substrate = await submitThroughSubstrate({
+        correlationId: `chat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        modelId: response.model || selectedModel,
+        content: assistantContent,
+      });
 
       let conversationId = input.conversationId;
       if (ctx.user) {
@@ -141,6 +147,7 @@ export const chatRouter = router({
         sources,
         research: input.research,
         knowledge,
+        substrate,
       };
     }),
 });

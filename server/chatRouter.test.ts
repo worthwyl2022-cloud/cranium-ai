@@ -16,6 +16,15 @@ vi.mock("./_core/llm", () => ({
   })),
 }));
 
+vi.mock("./substrate", () => ({
+  submitThroughSubstrate: vi.fn(async ({ correlationId, modelId }: { correlationId: string; modelId: string }) => ({
+    governed: true,
+    authority: "cranium-kernel",
+    synapse: { assessmentId: `synapse-${correlationId}`, correlationId, modelId, riskClass: "LOW", riskScore: 0.05, confidence: 0.95, intervention: "NONE", disposition: "ALLOW", traceCommitment: "test-trace" },
+    core: { authority: "cranium-kernel", transactionId: "tx-test", requestHash: "hash-test", journalSequence: 1, stateHash: "state-test", decision: "Granted" },
+  })),
+}));
+
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
@@ -47,6 +56,7 @@ describe("chat router", () => {
       conversationId: undefined,
     });
     expect(result.usage?.total_tokens).toBe(18);
+    expect(result.substrate).toMatchObject({ governed: true, authority: "cranium-kernel", core: { decision: "Granted" } });
   });
 
   it("routes Auto coding requests to the advanced coding model", async () => {
