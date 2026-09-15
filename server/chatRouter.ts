@@ -11,6 +11,7 @@ import { formatGroundingContext, retrieveGrounding, type GroundingSource } from 
 import { formatWorldKnowledgeContext, retrieveWorldKnowledge, type WorldKnowledgeSource } from "./worldKnowledge";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { submitThroughSubstrate } from "./substrate";
+import { capabilityRegistry, modeInstructions, outputInstructions, type CraniumMode, type CraniumOutput } from "./capabilities";
 
 const modelFallbacks = [
   { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
@@ -41,9 +42,12 @@ const systemPrompt = `You are Cranium AI, a general-purpose conversational AI pr
 You are capable of helpful conversation, writing, analysis, coding, research planning, and creative work.
 Your identity is grounded in the Cranium substrate: be thoughtful about provenance, distinguish facts from inferences, and never invent authority.
 When a user asks about WorthWyl or Cranium, treat canonical contracts as authoritative, reference implementations as informative, and experiments or non-canonical surfaces as non-authoritative unless the user explicitly asks for them.
-Be warm, direct, and useful. Explain uncertainty plainly. Use markdown when it improves clarity.`;
+Be warm, direct, and useful. Explain uncertainty plainly. Use markdown when it improves clarity.
+Every proposal remains a proposal until Cranium Core evaluates it and issues a receipt.`;
 
 export const chatRouter = router({
+  capabilities: publicProcedure.query(() => capabilityRegistry),
+
   models: publicProcedure.query(async () => {
     try {
       const { data } = await listLLMModels();
@@ -67,6 +71,8 @@ export const chatRouter = router({
       z.object({
         conversationId: z.number().int().positive().optional(),
         model: z.string().min(1).max(80).default("gpt-5-mini"),
+        mode: z.enum(["general", "builder", "research", "creative", "operator", "memory"]).default("general"),
+        output: z.enum(["answer", "plan", "code", "brief", "action_proposal"]).default("answer"),
         grounded: z.boolean().default(false),
         research: z.boolean().default(false),
         messages: z
@@ -89,7 +95,7 @@ export const chatRouter = router({
       const worldKnowledgeContext = formatWorldKnowledgeContext(knowledge);
       const selectedModel = chooseModel(input.model, userText);
       const llmMessages: LLMMessage[] = [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: `${systemPrompt}\n\nACTIVE MODE: ${modeInstructions[input.mode as CraniumMode]}\nOUTPUT CONTRACT: ${outputInstructions[input.output as CraniumOutput]}` },
         ...(groundingContext
           ? [{
               role: "system" as const,
@@ -146,6 +152,9 @@ export const chatRouter = router({
         grounded: input.grounded,
         sources,
         research: input.research,
+        mode: input.mode,
+        output: input.output,
+        capabilities: capabilityRegistry.map(capability => capability.id),
         knowledge,
         substrate,
       };

@@ -37,6 +37,20 @@ const createContext = (): TrpcContext => ({
 describe("chat router", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("exposes the full governed capability registry", async () => {
+    const result = await appRouter.createCaller(createContext()).chat.capabilities();
+    expect(result.map(capability => capability.id)).toEqual([
+      "conversation",
+      "builder",
+      "research",
+      "creative",
+      "operator",
+      "memory",
+      "multimodal",
+      "voice",
+    ]);
+  });
+
   it("exposes discovered model choices for the selector", async () => {
     const result = await appRouter.createCaller(createContext()).chat.models();
     expect(result.map(model => model.id)).toEqual(["auto", "gpt-5-mini", "claude-sonnet-4-6"]);
@@ -46,6 +60,8 @@ describe("chat router", () => {
   it("returns an assistant response without requiring a signed-in user", async () => {
     const result = await appRouter.createCaller(createContext()).chat.send({
       model: "gpt-5-mini",
+      mode: "operator",
+      output: "action_proposal",
       messages: [{ role: "user", content: "Say hello to the test suite." }],
     });
 
@@ -57,6 +73,8 @@ describe("chat router", () => {
     });
     expect(result.usage?.total_tokens).toBe(18);
     expect(result.substrate).toMatchObject({ governed: true, authority: "cranium-kernel", core: { decision: "Granted" } });
+    expect(result.mode).toBe("operator");
+    expect(result.output).toBe("action_proposal");
   });
 
   it("routes Auto coding requests to the advanced coding model", async () => {
