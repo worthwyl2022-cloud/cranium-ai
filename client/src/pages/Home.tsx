@@ -44,6 +44,12 @@ const starterPrompts = [
   "Help me turn an idea into a WorthWyl product.",
 ];
 
+const pronunciationDictionary: Array<[RegExp, string]> = [
+  [/\bWorthWyl\b/gi, "Worth while"],
+  [/\bWyl\b/gi, "while"],
+  [/\bCranium\b/gi, "Cray-nee-um"],
+];
+
 const defaultMessages: ChatMessage[] = [
   {
     role: "assistant",
@@ -88,6 +94,8 @@ export default function Home() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceRate, setVoiceRate] = useState(0.98);
   const [voicePitch, setVoicePitch] = useState(0.95);
+  const [voiceName, setVoiceName] = useState("");
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
@@ -117,11 +125,12 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(window.localStorage.getItem(voiceStorageKey) ?? "null") as { enabled?: boolean; rate?: number; pitch?: number } | null;
+      const saved = JSON.parse(window.localStorage.getItem(voiceStorageKey) ?? "null") as { enabled?: boolean; rate?: number; pitch?: number; voiceName?: string } | null;
       if (saved) {
         if (typeof saved.enabled === "boolean") setVoiceEnabled(saved.enabled);
         if (typeof saved.rate === "number") setVoiceRate(saved.rate);
         if (typeof saved.pitch === "number") setVoicePitch(saved.pitch);
+        if (typeof saved.voiceName === "string") setVoiceName(saved.voiceName);
       }
     } catch {
       // Browser storage can be unavailable in private or restricted contexts.
@@ -130,11 +139,19 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(voiceStorageKey, JSON.stringify({ enabled: voiceEnabled, rate: voiceRate, pitch: voicePitch }));
+      window.localStorage.setItem(voiceStorageKey, JSON.stringify({ enabled: voiceEnabled, rate: voiceRate, pitch: voicePitch, voiceName }));
     } catch {
       // Preference persistence is best-effort.
     }
-  }, [voiceEnabled, voicePitch, voiceRate, voiceStorageKey]);
+  }, [voiceEnabled, voiceName, voicePitch, voiceRate, voiceStorageKey]);
+
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) return;
+    const loadVoices = () => setAvailableVoices(window.speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith("en")));
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   useEffect(() => {
     if (!messagesQuery.data || !openConversationId) return;
@@ -199,12 +216,29 @@ export default function Home() {
       setSpeakingIndex(null);
       return;
     }
-    const spoken = text.replace(/[`*_>#\[\]]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+    const spoken = pronunciationDictionary.reduce((value, [pattern, replacement]) => value.replace(pattern, replacement), text)
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/[`*_>#\[\]()]/g, "")
+      .replace(/^\s*[-•]\s+/gm, "")
+      .replace(/\bGPT-?5\b/gi, "G P T five")
+      .replace(/\bAI\b/g, "A I")
+      .replace(/\bAPI\b/g, "A P I")
+      .replace(/\bUI\b/g, "U I")
+      .replace(/\bUX\b/g, "U X")
+      .replace(/\s+/g, " ")
+      .trim();
     const utterance = new SpeechSynthesisUtterance(spoken);
     utterance.lang = "en-US";
-    utterance.rate = voiceRate;
+    utterance.rate = Math.min(1.08, Math.max(0.82, voiceRate));
     utterance.pitch = voicePitch;
+    const selectedVoice = availableVoices.find(voice => voice.name === voiceName)
+      ?? availableVoices.find(voice => /natural|neural|premium|samantha|ava|jenny|aria/i.test(voice.name))
+      ?? availableVoices.find(voice => voice.lang.toLowerCase() === "en-us")
+      ?? availableVoices[0];
+    if (selectedVoice) utterance.voice = selectedVoice;
     utterance.onend = () => setSpeakingIndex(null);
+    utterance.onerror = () => setSpeakingIndex(null);
     setSpeakingIndex(index);
     window.speechSynthesis.speak(utterance);
   };
@@ -290,7 +324,7 @@ export default function Home() {
               {messages.length === 1 && !isSending && <div className="mt-9 grid gap-2 md:grid-cols-3">{starterPrompts.map((prompt, index) => <button key={prompt} onClick={() => void sendMessage(prompt)} className="group rounded-xl border border-white/10 bg-white/[0.025] p-3.5 text-left text-xs leading-relaxed text-[#9fa9a4] transition hover:-translate-y-0.5 hover:border-[#ffc857]/30 hover:bg-[#ffc857]/[0.06] hover:text-[#eef7f0]"><span className="mb-3 block font-mono text-[9px] text-[#ffc857]">0{index + 1}</span>{prompt}<ArrowUp size={14} className="mt-3 rotate-45 text-[#68756f] transition group-hover:text-[#ffc857]" /></button>)}</div>}
             </div>
           </div>
-          <div className="composer-wrap px-4 pb-5 md:px-8"><form onSubmit={handleSubmit} className="mx-auto max-w-[780px]"><div className="composer relative rounded-2xl border border-white/10 bg-[#1c2228] p-3 shadow-2xl shadow-black/10"><Textarea ref={textareaRef} value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(draft); } }} placeholder="Message Cranium AI..." className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0" disabled={isSending} /><div className="flex items-center justify-between px-1 pt-2"><div className="flex items-center gap-1"><button type="button" className={`composer-action ${voiceEnabled ? "composer-action-active" : ""}`} title="Toggle voice replies" onClick={() => setVoiceEnabled(value => !value)}><Volume2 size={15} /></button><button type="button" className={`composer-action ${showVoiceSettings ? "composer-action-active" : ""}`} title="Voice settings" onClick={() => setShowVoiceSettings(value => !value)}><Settings2 size={15} /></button><button type="button" className={`composer-action ${isListening ? "composer-action-active" : ""}`} title="Speak to Cranium" onClick={toggleListening}><Mic size={15} /></button><button type="button" className={`composer-action ${researchMode ? "composer-action-active" : ""}`} title="Toggle live research" onClick={() => setResearchMode(value => !value)}><Globe2 size={15} /></button><button type="button" className={`composer-action ${grounded ? "composer-action-active" : ""}`} title="Toggle GitHub grounding" onClick={() => setGrounded(value => !value)}><Search size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Attach file"><Plus size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Add context"><FileText size={14} /></button><span className="ml-2 hidden font-mono text-[9px] uppercase tracking-[0.12em] text-[#65716b] sm:inline">Shift + Enter for new line</span></div><div className="flex items-center gap-2"><div className="relative"><select aria-label="Select model" value={model} onChange={event => setModel(event.target.value)} className="model-select"><option value={selectedModel?.id}>{selectedModel?.label || "Auto"}</option>{models.filter(item => item.id !== selectedModel?.id).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select><ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#76837c]" /></div><button type="submit" disabled={!draft.trim() || isSending} className="send-button" aria-label="Send message"><ArrowUp size={17} /></button></div></div></div><div className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.17em] text-[#59655f]">{researchMode ? "Live research on" : grounded ? "GitHub grounding on" : "Cranium can make mistakes · Check important information"}</div>{showVoiceSettings && <div className="voice-settings-panel"><div className="voice-settings-heading"><Volume2 size={13} /> Voice settings</div><label>Autoplay replies <input type="checkbox" checked={voiceEnabled} onChange={event => setVoiceEnabled(event.target.checked)} /></label><label>Speed <input type="range" min="0.7" max="1.3" step="0.05" value={voiceRate} onChange={event => setVoiceRate(Number(event.target.value))} /><span>{voiceRate.toFixed(2)}×</span></label><label>Pitch <input type="range" min="0.7" max="1.3" step="0.05" value={voicePitch} onChange={event => setVoicePitch(Number(event.target.value))} /><span>{voicePitch.toFixed(2)}</span></label></div>}</form></div>
+          <div className="composer-wrap px-4 pb-5 md:px-8"><form onSubmit={handleSubmit} className="mx-auto max-w-[780px]"><div className="composer relative rounded-2xl border border-white/10 bg-[#1c2228] p-3 shadow-2xl shadow-black/10"><Textarea ref={textareaRef} value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(draft); } }} placeholder="Message Cranium AI..." className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0" disabled={isSending} /><div className="flex items-center justify-between px-1 pt-2"><div className="flex items-center gap-1"><button type="button" className={`composer-action ${voiceEnabled ? "composer-action-active" : ""}`} title="Toggle voice replies" onClick={() => setVoiceEnabled(value => !value)}><Volume2 size={15} /></button><button type="button" className={`composer-action ${showVoiceSettings ? "composer-action-active" : ""}`} title="Voice settings" onClick={() => setShowVoiceSettings(value => !value)}><Settings2 size={15} /></button><button type="button" className={`composer-action ${isListening ? "composer-action-active" : ""}`} title="Speak to Cranium" onClick={toggleListening}><Mic size={15} /></button><button type="button" className={`composer-action ${researchMode ? "composer-action-active" : ""}`} title="Toggle live research" onClick={() => setResearchMode(value => !value)}><Globe2 size={15} /></button><button type="button" className={`composer-action ${grounded ? "composer-action-active" : ""}`} title="Toggle GitHub grounding" onClick={() => setGrounded(value => !value)}><Search size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Attach file"><Plus size={15} /></button><button type="button" className="composer-action hidden sm:flex" title="Add context"><FileText size={14} /></button><span className="ml-2 hidden font-mono text-[9px] uppercase tracking-[0.12em] text-[#65716b] sm:inline">Shift + Enter for new line</span></div><div className="flex items-center gap-2"><div className="relative"><select aria-label="Select model" value={model} onChange={event => setModel(event.target.value)} className="model-select"><option value={selectedModel?.id}>{selectedModel?.label || "Auto"}</option>{models.filter(item => item.id !== selectedModel?.id).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select><ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#76837c]" /></div><button type="submit" disabled={!draft.trim() || isSending} className="send-button" aria-label="Send message"><ArrowUp size={17} /></button></div></div></div><div className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.17em] text-[#59655f]">{researchMode ? "Live research on" : grounded ? "GitHub grounding on" : "Cranium can make mistakes · Check important information"}</div>{showVoiceSettings && <div className="voice-settings-panel"><div className="voice-settings-heading"><Volume2 size={13} /> Voice settings</div><label>Autoplay replies <input type="checkbox" checked={voiceEnabled} onChange={event => setVoiceEnabled(event.target.checked)} /></label><label>Voice <select aria-label="Select reading voice" value={voiceName} onChange={event => setVoiceName(event.target.value)} disabled={!availableVoices.length}><option value="">Best available</option>{availableVoices.map(voice => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name} · {voice.lang}</option>)}</select></label><label>Speed <input type="range" min="0.7" max="1.3" step="0.05" value={voiceRate} onChange={event => setVoiceRate(Number(event.target.value))} /><span>{voiceRate.toFixed(2)}×</span></label><label>Pitch <input type="range" min="0.7" max="1.3" step="0.05" value={voicePitch} onChange={event => setVoicePitch(Number(event.target.value))} /><span>{voicePitch.toFixed(2)}</span></label></div>}</form></div>
         </main>
 
         {showLayer && <aside className="cranium-inspector hidden w-[274px] shrink-0 border-l border-white/10 bg-[#12161b] px-5 py-6 xl:block"><div className="mb-8 flex items-start justify-between"><div><div className="mb-2 flex items-center gap-2 text-[#ffc857]"><Cpu size={15} /><span className="font-mono text-[10px] uppercase tracking-[0.2em]">Cranium layer</span></div><h2 className="font-display text-[22px] tracking-[-0.04em]">Make it yours.</h2></div><button className="text-[#718078] hover:text-white" onClick={() => setShowLayer(false)}><X size={15} /></button></div><div className="layer-card mb-5"><div className="mb-4 flex items-center justify-between"><span className="text-xs text-[#dfe5df]">Intelligence routing</span><span className="status-pill"><span /> live</span></div><p className="text-xs leading-relaxed text-[#87948d]">Cranium combines live news, reference knowledge, GitHub substrate, and model routing while preserving source provenance.</p><div className="mt-4 space-y-2">{models.slice(0, 3).map(item => <div key={item.id} className="flex items-center justify-between text-[11px]"><span className="text-[#9eaaa4]">{item.provider}</span><span className="font-mono text-[10px] text-[#68756f]">{item.note}</span></div>)}</div></div><div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-[#728079]">Modes</div><div className="space-y-2">{[
