@@ -17,6 +17,13 @@ const targets: GroundingTarget[] = [
     keywords: ["cranium", "kernel", "substrate", "authority", "canonical", "governance", "worthwyl"],
   },
   {
+    repo: "cranium-content-hub",
+    file: "README.md",
+    url: "https://github.com/worthwyl2022-cloud/cranium-content-hub/blob/main/README.md",
+    authority: "supporting",
+    keywords: ["cranium", "content", "hub", "acquisition", "documentation", "ecosystem"],
+  },
+  {
     repo: "cranium-canonlane-contracts",
     file: "README.md",
     url: "https://github.com/worthwyl2022-cloud/cranium-canonlane-contracts/blob/main/README.md",
