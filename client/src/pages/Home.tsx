@@ -269,7 +269,7 @@ export default function Home() {
       <header className="cranium-topbar flex h-[74px] items-center justify-between border-b border-white/10 px-4 md:px-7">
         <div className="flex items-center gap-3">
           <button className="icon-button md:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation"><Menu size={19} /></button>
-          <div className="brand-mark brand-mark-image" aria-hidden="true"><img src="/brand/cranium-logo.webp" alt="Cranium flame-brain logo" /></div>
+          <div className="brand-mark brand-mark-image" aria-hidden="true"><img src="/brand/worthwyl-creative-os.jpg" alt="Cranium flame-brain logo" /></div>
           <div className="leading-none">
             <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#a8b5b0]">WorthWyl presents</div>
             <div className="mt-1 font-display text-[21px] tracking-[-0.04em] text-[#f8f2e7]">Cranium <span className="text-[#ffc857]">AI</span></div>
