@@ -26,7 +26,7 @@ export type SubstratePass = {
 
 const substrateUrl = () => {
   const value = process.env.CRANIUM_SUBSTRATE_URL?.trim();
-  if (!value) throw new Error("CRANIUM_SUBSTRATE_URL is not configured; Cranium AI cannot bypass the substrate");
+  if (!value) throw new Error("CRANIUM_SUBSTRATE_URL is not configured; Cranium AI cannot return an ungoverned response");
   return value.replace(/\/$/, "");
 };
 
