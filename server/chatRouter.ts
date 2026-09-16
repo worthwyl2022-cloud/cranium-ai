@@ -97,7 +97,7 @@ export const chatRouter = router({
               role: z.enum(["user", "assistant"]),
               content: z.string().min(1).max(30000),
               attachment: z.object({
-                url: z.string().url(),
+                key: z.string().min(1).max(240),
                 filename: z.string().min(1).max(180),
                 contentType: z.string().min(1).max(120),
                 size: z.number().int().positive(),
@@ -117,6 +117,16 @@ export const chatRouter = router({
       const worldKnowledgeContext = formatWorldKnowledgeContext(knowledge);
       const selectedModel = chooseModel(input.model, userText);
       const selfModel = await getCraniumSelfModel();
+      const attachmentKeys = recentMessages.flatMap(message => message.attachment ? [message.attachment.key] : []);
+      const userId = ctx.user?.id;
+      if (attachmentKeys.length && !userId) throw new Error("Sign in is required to send file attachments");
+      if (userId && attachmentKeys.some(key => !key.startsWith(`cranium-uploads/${userId}/`))) {
+        throw new Error("Attachment provenance check failed");
+      }
+      const signedAttachments = new Map<string, string>();
+      await Promise.all(Array.from(new Set(attachmentKeys)).map(async key => {
+        signedAttachments.set(key, await storageGetSignedUrl(key));
+      }));
       const llmMessages: LLMMessage[] = [
         { role: "system", content: systemPrompt },
         { role: "system", content: selfModelPrompt(selfModel) },
@@ -137,7 +147,7 @@ export const chatRouter = router({
               role: message.role,
               content: [
                 { type: "text" as const, text: message.content },
-                { type: "file_url" as const, file_url: { url: message.attachment.url, mime_type: message.attachment.contentType } },
+                { type: "file_url" as const, file_url: { url: signedAttachments.get(message.attachment.key)!, mime_type: message.attachment.contentType } },
               ],
             }
           : message),

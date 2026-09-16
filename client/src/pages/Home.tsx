@@ -36,7 +36,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type GroundingSource = { repo: string; file: string; url: string; authority: string; excerpt: string };
 type WorldKnowledgeSource = { kind: "news" | "reference"; title: string; url: string; domain: string; snippet: string; publishedAt?: string };
-type ChatAttachment = { url: string; filename: string; contentType: string; size: number };
+type ChatAttachment = { key: string; filename: string; contentType: string; size: number };
 type ChatMessage = { role: "user" | "assistant"; content: string; attachment?: ChatAttachment; model?: string; grounded?: boolean; research?: boolean; sources?: GroundingSource[]; knowledge?: WorldKnowledgeSource[]; error?: boolean; retryText?: string };
 type BrowserRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
 
@@ -217,7 +217,7 @@ export default function Home() {
         reader.readAsDataURL(file);
       });
       const uploaded = await uploadMutation.mutateAsync({ filename: file.name, contentType: file.type || "application/octet-stream", size: file.size, dataBase64 });
-      setAttachment({ url: uploaded.url, filename: uploaded.filename, contentType: uploaded.contentType, size: uploaded.size });
+      setAttachment({ key: uploaded.key, filename: uploaded.filename, contentType: uploaded.contentType, size: uploaded.size });
     } catch (error) {
       const detail = error instanceof Error ? error.message.replace(/^TRPCClientError:\s*/i, "").slice(0, 160) : "Upload failed.";
       setMessages(current => [...current, { role: "assistant", content: `I couldn’t upload that file.\n\n**Details:** ${detail}` }]);
