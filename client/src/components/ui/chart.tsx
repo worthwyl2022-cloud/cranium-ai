@@ -102,6 +102,17 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+type ChartTooltipPayloadItem = {
+  type?: string;
+  dataKey?: string;
+  name?: string;
+  value?: number | string;
+  color?: string;
+  payload?: { fill?: string };
+};
+
+type ChartTooltipPayload = ChartTooltipPayloadItem[];
+
 function ChartTooltipContent({
   active,
   payload,
@@ -116,8 +127,13 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<"div"> & {
+}: React.ComponentProps<"div"> & {
+    active?: boolean;
+    payload?: ChartTooltipPayload;
+    label?: string | number;
+    labelClassName?: string;
+    labelFormatter?: (value: unknown, payload: ChartTooltipPayload) => React.ReactNode;
+    formatter?: (value: unknown, name: unknown, item: ChartTooltipPayloadItem, index: number, payload: unknown) => React.ReactNode;
     hideLabel?: boolean;
     hideIndicator?: boolean;
     indicator?: "line" | "dot" | "dashed";
@@ -182,7 +198,7 @@ function ChartTooltipContent({
           .map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color || item.payload.fill || item.color;
+            const indicatorColor = color || item.payload?.fill || item.color;
 
             return (
               <div
@@ -256,8 +272,9 @@ function ChartLegendContent({
   payload,
   verticalAlign = "bottom",
   nameKey,
-}: React.ComponentProps<"div"> &
-  Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+}: React.ComponentProps<"div"> & {
+    payload?: Array<ChartTooltipPayloadItem & { value?: string | number }>;
+    verticalAlign?: "top" | "middle" | "bottom";
     hideIcon?: boolean;
     nameKey?: string;
   }) {

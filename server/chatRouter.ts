@@ -12,6 +12,7 @@ import { formatWorldKnowledgeContext, retrieveWorldKnowledge, type WorldKnowledg
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { getCraniumSelfModel, selfModelPrompt } from "./selfModel";
+import { governResponse } from "./responseGovernance";
 
 const modelFallbacks = [
   { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
@@ -157,8 +158,19 @@ export const chatRouter = router({
         model: selectedModel,
         messages: llmMessages,
       });
-      const assistantContent = textFromContent(response.choices?.[0]?.message?.content);
-      if (!assistantContent) throw new Error("Cranium AI returned an empty response");
+      const providerContent = textFromContent(response.choices?.[0]?.message?.content);
+      if (!providerContent) throw new Error("Cranium AI returned an empty response");
+      const governed = governResponse({
+        userText,
+        content: providerContent,
+        evidence: {
+          grounded: input.grounded,
+          research: input.research,
+          sourceCount: sources.length,
+          knowledgeCount: knowledge.length,
+        },
+      });
+      const assistantContent = governed.content;
 
       let conversationId = input.conversationId;
       if (ctx.user) {
@@ -190,6 +202,7 @@ export const chatRouter = router({
         sources,
         research: input.research,
         knowledge,
+        governance: governed.receipt,
       };
     }),
 });
