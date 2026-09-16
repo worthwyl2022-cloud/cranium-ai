@@ -13,11 +13,24 @@ const tag = (xml: string, name: string) => {
   return match ? stripHtml(match[1]) : "";
 };
 
+async function fetchWithRetry(url: string, attempts = 2): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (response.ok) return response;
+      lastError = new Error(`Knowledge source returned HTTP ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Knowledge source unavailable");
+}
+
 async function wikipediaSearch(query: string): Promise<WorldKnowledgeSource[]> {
   try {
     const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=3&format=json&origin=*`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(4500) });
-    if (!response.ok) return [];
+    const response = await fetchWithRetry(url);
     const payload = (await response.json()) as { query?: { search?: Array<{ title: string; pageid: number; snippet: string; timestamp?: string }> } };
     return (payload.query?.search ?? []).map(item => ({
       kind: "reference" as const,
@@ -35,8 +48,7 @@ async function wikipediaSearch(query: string): Promise<WorldKnowledgeSource[]> {
 async function newsSearch(query: string): Promise<WorldKnowledgeSource[]> {
   try {
     const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(4500) });
-    if (!response.ok) return [];
+    const response = await fetchWithRetry(url);
     const xml = await response.text();
     return Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)).slice(0, 5).map(match => {
       const item = match[1];
