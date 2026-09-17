@@ -1,3 +1,2 @@
-ALTER TABLE `messages`
-  ADD COLUMN `correlationId` varchar(64),
-  ADD COLUMN `contextEnvelopeHash` varchar(64);
+ALTER TABLE `messages` ADD `correlationId` varchar(64);--> statement-breakpoint
+ALTER TABLE `messages` ADD `contextEnvelopeHash` varchar(64);
