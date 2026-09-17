@@ -12,6 +12,20 @@
 - Authenticated conversation and message persistence.
 - Responsive dark WorthWyl interface using the supplied flame-brain mark.
 
+## Permanent Cranium boundary
+
+Cranium AI is the product and cognition layer. It may route model requests, retrieve
+research, present source-aware context, retain authenticated conversations, and propose
+responses or actions. It does not grant authority, commit governed state, invoke protected
+tools, or issue authoritative receipts. Those responsibilities belong to Cranium Synapse
+and the canonical `cranium-kernel` authority boundary.
+
+Every response is associated with a versioned context envelope. The envelope binds a
+correlation identifier, policy version, request hash, source provenance, source authority
+classification, retrieval time, evidence class, uncertainty, and a SHA-256 content hash.
+Governed response receipts carry the envelope hash. Persisted assistant messages retain the
+correlation identifier and envelope hash for later review.
+
 ## Development
 
 ```bash
@@ -22,9 +36,10 @@ pnpm dev
 Run validation and production builds with:
 
 ```bash
-pnpm check
-pnpm test -- --run
-pnpm build
+pnpm run check
+pnpm test
+pnpm run build
+pnpm audit --audit-level high
 ```
 
 The application uses the Manus WebDev full-stack template with React, tRPC, Express, Drizzle, and Manus authentication. Runtime configuration is supplied by the hosting environment; do not commit `.env` files or secrets.

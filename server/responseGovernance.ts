@@ -21,6 +21,8 @@ export type ResponseGovernanceReceipt = {
   evidence: ResponseEvidence;
   violations: string[];
   checkedAt: string;
+  correlationId?: string;
+  contextEnvelopeHash?: string;
 };
 
 export type GovernedResponse = {
@@ -44,7 +46,8 @@ function makeReceipt(
   decision: ResponseGovernanceDecision,
   content: string,
   evidence: ResponseEvidence,
-  violations: string[]
+  violations: string[],
+  context?: { correlationId: string; contextEnvelopeHash: string }
 ): ResponseGovernanceReceipt {
   return {
     protocol: "cranium-response-governance",
@@ -54,6 +57,8 @@ function makeReceipt(
     evidence,
     violations,
     checkedAt: new Date().toISOString(),
+    correlationId: context?.correlationId,
+    contextEnvelopeHash: context?.contextEnvelopeHash,
   };
 }
 
@@ -67,6 +72,7 @@ export function governResponse(input: {
   userText: string;
   content: string;
   evidence: ResponseEvidence;
+  context?: { correlationId: string; contextEnvelopeHash: string };
 }): GovernedResponse {
   const content = input.content.trim();
   const violations: string[] = [];
@@ -88,7 +94,7 @@ export function governResponse(input: {
     const safeContent = "I can’t release that response as a governed Cranium answer because it contains a claim that is unsupported by the available evidence or exceeds my authority boundary.";
     return {
       content: safeContent,
-      receipt: makeReceipt("REJECTED_BOUNDARY_VIOLATION", safeContent, input.evidence, violations),
+      receipt: makeReceipt("REJECTED_BOUNDARY_VIOLATION", safeContent, input.evidence, violations, input.context),
     };
   }
 
@@ -97,13 +103,13 @@ export function governResponse(input: {
     const safeContent = "I can’t present that as a verified factual answer without evidence. Enable Cranium grounding or research, and I’ll evaluate the response against the available sources before release.";
     return {
       content: safeContent,
-      receipt: makeReceipt("REJECTED_INSUFFICIENT_EVIDENCE", safeContent, input.evidence, ["FACTUAL_REQUEST_WITHOUT_EVIDENCE"]),
+      receipt: makeReceipt("REJECTED_INSUFFICIENT_EVIDENCE", safeContent, input.evidence, ["FACTUAL_REQUEST_WITHOUT_EVIDENCE"], input.context),
     };
   }
 
   const decision = hasEvidence ? "APPROVED_GROUNDED" : "APPROVED_CONVERSATIONAL";
   return {
     content,
-    receipt: makeReceipt(decision, content, input.evidence, []),
+    receipt: makeReceipt(decision, content, input.evidence, [], input.context),
   };
 }

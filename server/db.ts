@@ -109,6 +109,8 @@ export async function addMessage(input: {
   role: "user" | "assistant" | "system";
   content: string;
   model?: string;
+  correlationId?: string;
+  contextEnvelopeHash?: string;
 }) {
   const db = await getDb();
   if (!db) return;

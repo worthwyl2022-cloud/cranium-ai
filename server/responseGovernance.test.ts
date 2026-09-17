@@ -73,4 +73,18 @@ describe("Cranium response governance", () => {
     expect(result.receipt.decision).toBe("APPROVED_CONVERSATIONAL");
     expect(result.content).toContain("Sentinel");
   });
+
+  it("binds governed receipts to the context envelope", () => {
+    const result = governResponse({
+      userText: "What does the contract require?",
+      content: "The contract requires a real evaluation.",
+      evidence: groundedEvidence,
+      context: {
+        correlationId: "correlation-test-002",
+        contextEnvelopeHash: "a".repeat(64),
+      },
+    });
+    expect(result.receipt.correlationId).toBe("correlation-test-002");
+    expect(result.receipt.contextEnvelopeHash).toBe("a".repeat(64));
+  });
 });

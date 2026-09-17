@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
 import { invokeLLM, listLLMModels, type Message as LLMMessage } from "./_core/llm";
 import {
   addMessage,
@@ -13,6 +14,7 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { getCraniumSelfModel, selfModelPrompt } from "./selfModel";
 import { governResponse } from "./responseGovernance";
+import { createContextEnvelope } from "./contextEnvelope";
 
 const modelFallbacks = [
   { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
@@ -114,6 +116,17 @@ export const chatRouter = router({
       const userText = recentMessages.findLast(message => message.role === "user")?.content ?? "";
       const sources: GroundingSource[] = input.grounded ? await retrieveGrounding(userText) : [];
       const knowledge: WorldKnowledgeSource[] = input.research ? await retrieveWorldKnowledge(userText) : [];
+      const correlationId = randomUUID();
+      const contextEnvelope = createContextEnvelope({
+        correlationId,
+        requestText: userText,
+        modelId: chooseModel(input.model, userText),
+        grounded: input.grounded,
+        research: input.research,
+        retrievedAt: new Date().toISOString(),
+        groundingSources: sources,
+        knowledgeSources: knowledge,
+      });
       const groundingContext = formatGroundingContext(sources);
       const worldKnowledgeContext = formatWorldKnowledgeContext(knowledge);
       const selectedModel = chooseModel(input.model, userText);
@@ -169,6 +182,10 @@ export const chatRouter = router({
           sourceCount: sources.length,
           knowledgeCount: knowledge.length,
         },
+        context: {
+          correlationId,
+          contextEnvelopeHash: contextEnvelope.contentHash,
+        },
       });
       const assistantContent = governed.content;
 
@@ -189,7 +206,15 @@ export const chatRouter = router({
           if (userMessage) {
             await addMessage({ conversationId, userId: ctx.user.id, role: "user", content: userMessage.content });
           }
-          await addMessage({ conversationId, userId: ctx.user.id, role: "assistant", content: assistantContent, model: response.model });
+          await addMessage({
+            conversationId,
+            userId: ctx.user.id,
+            role: "assistant",
+            content: assistantContent,
+            model: response.model,
+            correlationId,
+            contextEnvelopeHash: contextEnvelope.contentHash,
+          });
         }
       }
 
@@ -203,6 +228,7 @@ export const chatRouter = router({
         research: input.research,
         knowledge,
         governance: governed.receipt,
+        contextEnvelope,
       };
     }),
 });

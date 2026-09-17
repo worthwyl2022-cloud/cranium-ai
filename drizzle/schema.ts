@@ -29,6 +29,8 @@ export const messages = mysqlTable("messages", {
   role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
   content: text("content").notNull(),
   model: varchar("model", { length: 80 }),
+  correlationId: varchar("correlationId", { length: 64 }),
+  contextEnvelopeHash: varchar("contextEnvelopeHash", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
