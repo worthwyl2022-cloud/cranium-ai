@@ -11,14 +11,14 @@ afterEach(async () => {
   await Promise.all(stateDirs.splice(0).map(path => rm(path, { recursive: true, force: true })));
 });
 
-describe("Cranium governed self-model", () => {
+describe("Convertible Cranium governed self-model", () => {
   it("reports real identity, bounded agency, and honest limits", async () => {
     process.env.CRANIUM_COMA_STATE_DIR = await mkdtemp(join(tmpdir(), "cranium-self-model-"));
     stateDirs.push(process.env.CRANIUM_COMA_STATE_DIR);
 
     const model = await getCraniumSelfModel();
 
-    expect(model.identity).toBe("Cranium AI");
+    expect(model.identity).toBe("Convertible Cranium AI");
     expect(model.presentedBy).toBe("WorthWyl");
     expect(model.agency).toBe("bounded");
     expect(model.awareness.knowsCapabilityLimits).toBe(true);
