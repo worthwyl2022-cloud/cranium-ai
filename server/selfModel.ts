@@ -12,7 +12,7 @@ export const CRANIUM_AGENCY_BOUNDARIES = {
 } as const;
 
 export type CraniumSelfModel = {
-  identity: "Cranium AI";
+  identity: "Convertible Cranium AI";
   presentedBy: "WorthWyl";
   agency: "bounded";
   operatingPosture: "reflective-and-governed";
@@ -30,7 +30,7 @@ export type CraniumSelfModel = {
 export async function getCraniumSelfModel(): Promise<CraniumSelfModel> {
   const coma = await readComaState();
   return {
-    identity: "Cranium AI",
+    identity: "Convertible Cranium AI",
     presentedBy: "WorthWyl",
     agency: "bounded",
     operatingPosture: "reflective-and-governed",
