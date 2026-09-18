@@ -1,23 +1,23 @@
-# Cranium AI
+# Convertible Cranium AI
 
-**WorthWyl presents Cranium AI** — a conversational intelligence workspace grounded in the Cranium substrate and designed for real-world research, creation, and governed product work.
+**WorthWyl presents Convertible Cranium AI** — a conversational intelligence workspace grounded in the Convertible Cranium substrate and designed for real-world research, creation, and governed product work.
 
 ## What is included
 
 - ChatGPT-style conversational workspace with multi-model routing.
 - Live research mode using current news and reference knowledge.
-- GitHub grounding for the Cranium ecosystem with authority-aware sources.
+- GitHub grounding for the Convertible Cranium ecosystem with authority-aware sources.
 - Clickable source chips and freshness-aware research context.
 - Native browser voice replies and microphone input.
 - Authenticated conversation and message persistence.
 - Responsive dark WorthWyl interface using the supplied flame-brain mark.
 
-## Permanent Cranium boundary
+## Permanent Convertible Cranium boundary
 
-Cranium AI is the product and cognition layer. It may route model requests, retrieve
+Convertible Cranium AI is the product and cognition layer. It may route model requests, retrieve
 research, present source-aware context, retain authenticated conversations, and propose
 responses or actions. It does not grant authority, commit governed state, invoke protected
-tools, or issue authoritative receipts. Those responsibilities belong to Cranium Synapse
+tools, or issue authoritative receipts. Those responsibilities belong to Convertible Cranium Synapse
 and the canonical `cranium-kernel` authority boundary.
 
 Every response is associated with a versioned context envelope. The envelope binds a
@@ -46,4 +46,4 @@ The application uses the Manus WebDev full-stack template with React, tRPC, Expr
 
 ## Product direction
 
-Cranium is intended to become WorthWyl's real-world intelligence layer: a system that can reason across live knowledge, the Cranium substrate, user memory, governed tools, and future WorthWyl products while keeping provenance visible.
+Convertible Cranium is intended to become WorthWyl's real-world intelligence layer: a system that can reason across live knowledge, the Convertible Cranium substrate, user memory, governed tools, and future WorthWyl products while keeping provenance visible.
