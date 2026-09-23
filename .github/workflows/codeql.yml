@@ -16,7 +16,6 @@ permissions:
 
 jobs:
   analyze:
-    continue-on-error: true
     name: Analyze
     runs-on: ubuntu-latest
     strategy:
