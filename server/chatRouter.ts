@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { invokeLLM, listLLMModels, type Message as LLMMessage } from "./_core/llm";
+import {
+  invokeLLM,
+  listLLMModels,
+  type Message as LLMMessage,
+} from "./_core/llm";
 import {
   addMessage,
   createConversation,
@@ -8,26 +12,63 @@ import {
   listConversations,
   listMessages,
 } from "./db";
-import { formatGroundingContext, retrieveGrounding, type GroundingSource } from "./grounding";
-import { formatWorldKnowledgeContext, retrieveWorldKnowledge, type WorldKnowledgeSource } from "./worldKnowledge";
+import {
+  formatGroundingContext,
+  retrieveGrounding,
+  type GroundingSource,
+} from "./grounding";
+import {
+  formatWorldKnowledgeContext,
+  retrieveWorldKnowledge,
+  type WorldKnowledgeSource,
+} from "./worldKnowledge";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { getCraniumSelfModel, selfModelPrompt } from "./selfModel";
 import { governResponse } from "./responseGovernance";
 import { createContextEnvelope } from "./contextEnvelope";
+import {
+  assessDeliberation,
+  deliberate,
+  perceiveState,
+  processSubconscious,
+} from "./cognitiveArchitecture";
 
 const modelFallbacks = [
-  { id: "gpt-5-mini", label: "GPT-5 mini", provider: "OpenAI", note: "Fast workhorse" },
-  { id: "claude-sonnet-4-6", label: "Claude Sonnet", provider: "Anthropic", note: "Deep reasoning" },
-  { id: "gemini-3-flash-preview", label: "Gemini Flash", provider: "Google", note: "Long context" },
+  {
+    id: "gpt-5-mini",
+    label: "GPT-5 mini",
+    provider: "OpenAI",
+    note: "Fast workhorse",
+  },
+  {
+    id: "claude-sonnet-4-6",
+    label: "Claude Sonnet",
+    provider: "Anthropic",
+    note: "Deep reasoning",
+  },
+  {
+    id: "gemini-3-flash-preview",
+    label: "Gemini Flash",
+    provider: "Google",
+    note: "Long context",
+  },
   { id: "gpt-5", label: "GPT-5", provider: "OpenAI", note: "Advanced coding" },
 ];
 
 const chooseModel = (requestedModel: string, userText: string) => {
   if (requestedModel !== "auto") return requestedModel;
   const normalized = userText.toLowerCase();
-  if (/\b(code|bug|debug|typescript|javascript|python|sql|api|repository|github)\b/.test(normalized)) return "gpt-5";
-  if (/\b(research|sources|最新|news|current|today|evidence)\b/.test(normalized)) return "claude-sonnet-4-6";
+  if (
+    /\b(code|bug|debug|typescript|javascript|python|sql|api|repository|github)\b/.test(
+      normalized
+    )
+  )
+    return "gpt-5";
+  if (
+    /\b(research|sources|最新|news|current|today|evidence)\b/.test(normalized)
+  )
+    return "claude-sonnet-4-6";
   return "gpt-5-mini";
 };
 
@@ -35,7 +76,11 @@ const textFromContent = (content: unknown) => {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
     return content
-      .map(part => (typeof part === "object" && part && "text" in part ? String(part.text) : ""))
+      .map(part =>
+        typeof part === "object" && part && "text" in part
+          ? String(part.text)
+          : ""
+      )
       .join("");
   }
   return "";
@@ -54,34 +99,63 @@ export const chatRouter = router({
   selfModel: publicProcedure.query(() => getCraniumSelfModel()),
 
   upload: protectedProcedure
-    .input(z.object({
-      filename: z.string().min(1).max(180),
-      contentType: z.string().min(1).max(120),
-      size: z.number().int().positive().max(35 * 1024 * 1024),
-      dataBase64: z.string().min(1),
-    }))
+    .input(
+      z.object({
+        filename: z.string().min(1).max(180),
+        contentType: z.string().min(1).max(120),
+        size: z
+          .number()
+          .int()
+          .positive()
+          .max(35 * 1024 * 1024),
+        dataBase64: z.string().min(1),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const data = Buffer.from(input.dataBase64, "base64");
-      if (data.byteLength !== input.size) throw new Error("Upload size verification failed");
+      if (data.byteLength !== input.size)
+        throw new Error("Upload size verification failed");
       const safeName = input.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const stored = await storagePut(`cranium-uploads/${ctx.user.id}/${safeName}`, data, input.contentType);
+      const stored = await storagePut(
+        `cranium-uploads/${ctx.user.id}/${safeName}`,
+        data,
+        input.contentType
+      );
       const signedUrl = await storageGetSignedUrl(stored.key);
-      return { ...stored, url: signedUrl, filename: input.filename, contentType: input.contentType, size: input.size };
+      return {
+        ...stored,
+        url: signedUrl,
+        filename: input.filename,
+        contentType: input.contentType,
+        size: input.size,
+      };
     }),
 
   models: publicProcedure.query(async () => {
     try {
       const { data } = await listLLMModels();
       const available = new Set(data.map(model => model.id));
-      const discovered = modelFallbacks.filter(model => available.has(model.id));
+      const discovered = modelFallbacks.filter(model =>
+        available.has(model.id)
+      );
       const availableModels = discovered.length ? discovered : modelFallbacks;
-      return [{ id: "auto", label: "Auto", provider: "Convertible Cranium", note: "Routes by task" }, ...availableModels];
+      return [
+        {
+          id: "auto",
+          label: "Auto",
+          provider: "Convertible Cranium",
+          note: "Routes by task",
+        },
+        ...availableModels,
+      ];
     } catch {
       return modelFallbacks;
     }
   }),
 
-  conversations: protectedProcedure.query(({ ctx }) => listConversations(ctx.user.id)),
+  conversations: protectedProcedure.query(({ ctx }) =>
+    listConversations(ctx.user.id)
+  ),
 
   messages: protectedProcedure
     .input(z.object({ conversationId: z.number().int().positive() }))
@@ -99,12 +173,14 @@ export const chatRouter = router({
             z.object({
               role: z.enum(["user", "assistant"]),
               content: z.string().min(1).max(30000),
-              attachment: z.object({
-                key: z.string().min(1).max(240),
-                filename: z.string().min(1).max(180),
-                contentType: z.string().min(1).max(120),
-                size: z.number().int().positive(),
-              }).optional(),
+              attachment: z
+                .object({
+                  key: z.string().min(1).max(240),
+                  filename: z.string().min(1).max(180),
+                  contentType: z.string().min(1).max(120),
+                  size: z.number().int().positive(),
+                })
+                .optional(),
             })
           )
           .min(1)
@@ -113,9 +189,15 @@ export const chatRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const recentMessages = input.messages.slice(-24);
-      const userText = recentMessages.findLast(message => message.role === "user")?.content ?? "";
-      const sources: GroundingSource[] = input.grounded ? await retrieveGrounding(userText) : [];
-      const knowledge: WorldKnowledgeSource[] = input.research ? await retrieveWorldKnowledge(userText) : [];
+      const userText =
+        recentMessages.findLast(message => message.role === "user")?.content ??
+        "";
+      const sources: GroundingSource[] = input.grounded
+        ? await retrieveGrounding(userText)
+        : [];
+      const knowledge: WorldKnowledgeSource[] = input.research
+        ? await retrieveWorldKnowledge(userText)
+        : [];
       const correlationId = randomUUID();
       const contextEnvelope = createContextEnvelope({
         correlationId,
@@ -131,48 +213,98 @@ export const chatRouter = router({
       const worldKnowledgeContext = formatWorldKnowledgeContext(knowledge);
       const selectedModel = chooseModel(input.model, userText);
       const selfModel = await getCraniumSelfModel();
-      const attachmentKeys = recentMessages.flatMap(message => message.attachment ? [message.attachment.key] : []);
+      const cognitiveState = perceiveState(userText, "exhaustive");
+      const subconsciousState = processSubconscious(cognitiveState);
+      const evidenceAvailable = sources.length + knowledge.length > 0;
+      const deliberation = deliberate(
+        cognitiveState,
+        subconsciousState,
+        evidenceAvailable
+      );
+      const metacognitiveAssessment = assessDeliberation(
+        deliberation,
+        evidenceAvailable
+      );
+      const attachmentKeys = recentMessages.flatMap(message =>
+        message.attachment ? [message.attachment.key] : []
+      );
       const userId = ctx.user?.id;
-      if (attachmentKeys.length && !userId) throw new Error("Sign in is required to send file attachments");
-      if (userId && attachmentKeys.some(key => !key.startsWith(`cranium-uploads/${userId}/`))) {
+      if (attachmentKeys.length && !userId)
+        throw new Error("Sign in is required to send file attachments");
+      if (
+        userId &&
+        attachmentKeys.some(
+          key => !key.startsWith(`cranium-uploads/${userId}/`)
+        )
+      ) {
         throw new Error("Attachment provenance check failed");
       }
       const signedAttachments = new Map<string, string>();
-      await Promise.all(Array.from(new Set(attachmentKeys)).map(async key => {
-        signedAttachments.set(key, await storageGetSignedUrl(key));
-      }));
+      await Promise.all(
+        Array.from(new Set(attachmentKeys)).map(async key => {
+          signedAttachments.set(key, await storageGetSignedUrl(key));
+        })
+      );
       const llmMessages: LLMMessage[] = [
         { role: "system", content: systemPrompt },
-        { role: "system", content: selfModelPrompt(selfModel) },
+        {
+          role: "system",
+          content: `${selfModelPrompt(selfModel)}
+
+FUNCTIONAL COGNITIVE ARCHITECTURE:
+- Social perception is an estimate, not certainty.
+- Background/subconscious processing may surface associations, contradictions, hypotheses, and attention candidates, but has no authority.
+- Deliberation chooses a response strategy inside the governed boundary.
+- Metacognition evaluates evidence adequacy and uncertainty.
+- Constitutional authority remains outside the model and is never granted by confidence, personality, emotion, or generated text.
+
+CURRENT COGNITIVE STATE:
+${JSON.stringify({ cognitiveState, subconsciousState, deliberation, metacognitiveAssessment })}`,
+        },
         ...(groundingContext
-          ? [{
-              role: "system" as const,
-              content: `The user enabled Convertible Cranium GitHub grounding. Use the source excerpts below when relevant. Cite sources inline using the repository/file name in backticks. Do not claim a source says something it does not say. Preserve the authority labels.\n\n${groundingContext}`,
-            }]
+          ? [
+              {
+                role: "system" as const,
+                content: `The user enabled Convertible Cranium GitHub grounding. Use the source excerpts below when relevant. Cite sources inline using the repository/file name in backticks. Do not claim a source says something it does not say. Preserve the authority labels.\n\n${groundingContext}`,
+              },
+            ]
           : []),
         ...(worldKnowledgeContext
-          ? [{
-              role: "system" as const,
-              content: `The user enabled real-world research. Use the current news and reference results below to answer with freshness awareness. Cite sources inline using the source title or domain in brackets. Distinguish reported facts, reference summaries, and your own analysis. If dates conflict, call that out.\n\n${worldKnowledgeContext}`,
-            }]
+          ? [
+              {
+                role: "system" as const,
+                content: `The user enabled real-world research. Use the current news and reference results below to answer with freshness awareness. Cite sources inline using the source title or domain in brackets. Distinguish reported facts, reference summaries, and your own analysis. If dates conflict, call that out.\n\n${worldKnowledgeContext}`,
+              },
+            ]
           : []),
-        ...recentMessages.map(message => message.attachment
-          ? {
-              role: message.role,
-              content: [
-                { type: "text" as const, text: message.content },
-                { type: "file_url" as const, file_url: { url: signedAttachments.get(message.attachment.key)!, mime_type: message.attachment.contentType } },
-              ],
-            }
-          : message),
+        ...recentMessages.map(message =>
+          message.attachment
+            ? {
+                role: message.role,
+                content: [
+                  { type: "text" as const, text: message.content },
+                  {
+                    type: "file_url" as const,
+                    file_url: {
+                      url: signedAttachments.get(message.attachment.key)!,
+                      mime_type: message.attachment.contentType,
+                    },
+                  },
+                ],
+              }
+            : message
+        ),
       ];
 
       const response = await invokeLLM({
         model: selectedModel,
         messages: llmMessages,
       });
-      const providerContent = textFromContent(response.choices?.[0]?.message?.content);
-      if (!providerContent) throw new Error("Convertible Cranium AI returned an empty response");
+      const providerContent = textFromContent(
+        response.choices?.[0]?.message?.content
+      );
+      if (!providerContent)
+        throw new Error("Convertible Cranium AI returned an empty response");
       const governed = governResponse({
         userText,
         content: providerContent,
@@ -202,9 +334,16 @@ export const chatRouter = router({
           );
         }
         if (conversationId) {
-          const userMessage = recentMessages.findLast(message => message.role === "user");
+          const userMessage = recentMessages.findLast(
+            message => message.role === "user"
+          );
           if (userMessage) {
-            await addMessage({ conversationId, userId: ctx.user.id, role: "user", content: userMessage.content });
+            await addMessage({
+              conversationId,
+              userId: ctx.user.id,
+              role: "user",
+              content: userMessage.content,
+            });
           }
           await addMessage({
             conversationId,
