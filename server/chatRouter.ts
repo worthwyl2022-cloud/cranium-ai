@@ -34,6 +34,7 @@ import {
   processSubconscious,
 } from "./cognitiveArchitecture";
 import { runCognitiveLoop } from "./cognitiveLoop";
+import { learnFromCognitiveEpisode } from "./cognitiveLearning";
 
 const modelFallbacks = [
   {
@@ -232,6 +233,13 @@ export const chatRouter = router({
         deliberation,
         assessment: metacognitiveAssessment,
       });
+      const cognitiveLearning = learnFromCognitiveEpisode({
+        episodeId: correlationId,
+        uncertainty: cognitiveLoop.uncertainty,
+        requiresGrounding: cognitiveLoop.requiresGrounding,
+        challengeCount: cognitiveLoop.challenges.length,
+        contradictions: subconsciousState.contradictions.length,
+      });
       const attachmentKeys = recentMessages.flatMap(message =>
         message.attachment ? [message.attachment.key] : []
       );
@@ -272,6 +280,7 @@ ${JSON.stringify({
   deliberation,
   metacognitiveAssessment,
   cognitiveLoop,
+  cognitiveLearning,
 })}
 
 COGNITIVE LOOP:
