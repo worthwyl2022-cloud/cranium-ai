@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   analyze:
+    if: github.event.repository.visibility == 'public'
     continue-on-error: true
     name: Analyze
     runs-on: ubuntu-latest
@@ -37,3 +38,14 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+
+  private-repository-prerequisite:
+    if: github.event.repository.visibility != 'public'
+    name: CodeQL prerequisite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record repository limitation
+        run: |
+          echo "CodeQL analysis requires GitHub Code Security for private repositories."
+          echo "This repository is currently private, so the CodeQL analyzer is intentionally not invoked."
+          echo "The repository's normal CI remains authoritative for source validation."
