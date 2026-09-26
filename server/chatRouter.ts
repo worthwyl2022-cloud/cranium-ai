@@ -33,6 +33,7 @@ import {
   perceiveState,
   processSubconscious,
 } from "./cognitiveArchitecture";
+import { runCognitiveLoop } from "./cognitiveLoop";
 
 const modelFallbacks = [
   {
@@ -225,6 +226,12 @@ export const chatRouter = router({
         deliberation,
         evidenceAvailable
       );
+      const cognitiveLoop = runCognitiveLoop({
+        state: cognitiveState,
+        background: subconsciousState,
+        deliberation,
+        assessment: metacognitiveAssessment,
+      });
       const attachmentKeys = recentMessages.flatMap(message =>
         message.attachment ? [message.attachment.key] : []
       );
@@ -259,7 +266,20 @@ FUNCTIONAL COGNITIVE ARCHITECTURE:
 - Constitutional authority remains outside the model and is never granted by confidence, personality, emotion, or generated text.
 
 CURRENT COGNITIVE STATE:
-${JSON.stringify({ cognitiveState, subconsciousState, deliberation, metacognitiveAssessment })}`,
+${JSON.stringify({
+  cognitiveState,
+  subconsciousState,
+  deliberation,
+  metacognitiveAssessment,
+  cognitiveLoop,
+})}
+
+COGNITIVE LOOP:
+- Run cognition as observation -> association -> hypothesis -> challenge -> reconsideration -> decision.
+- Hypotheses are proposals, not facts.
+- Challenges must remain visible to the reasoning process.
+- Preserve uncertainty instead of laundering it into confidence.
+- The cognitive loop has no authority to authorize external actions.`,
         },
         ...(groundingContext
           ? [
