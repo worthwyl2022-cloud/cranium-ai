@@ -1,30 +1,28 @@
 # Convertible Cranium AI
 
-**WorthWyl presents Convertible Cranium AI** — a conversational intelligence workspace grounded in the Convertible Cranium substrate and designed for real-world research, creation, and governed product work.
+**Status: Intelligence interface & host surface — Non-canonical**
+
+The sole canonical authority source is [`cranium-kernel`](https://github.com/worthwyl2022-cloud/cranium-kernel).
+
+**WorthWyl presents Convertible Cranium AI** — the conversational intelligence workspace and host that guides users and reviewers through the Convertible Cranium multi-plane cognitive governance substrate.
+
+---
+
+## Permanent boundary
+
+Convertible Cranium AI is the product and cognition layer. It may route model requests, retrieve research, present source-aware context, retain authenticated conversations, and propose responses or actions. **It does not grant authority, commit governed state, invoke protected tools, or issue authoritative receipts.** Those responsibilities belong exclusively to the Kernel.
+
+> Cognition may come from anywhere. Authority comes only through Convertible Cranium.
 
 ## What is included
 
-- ChatGPT-style conversational workspace with multi-model routing.
-- Live research mode using current news and reference knowledge.
-- GitHub grounding for the Convertible Cranium ecosystem with authority-aware sources.
-- Clickable source chips and freshness-aware research context.
-- Native browser voice replies and microphone input.
-- Authenticated conversation and message persistence.
-- Responsive dark WorthWyl interface using the supplied flame-brain mark.
-
-## Permanent Convertible Cranium boundary
-
-Convertible Cranium AI is the product and cognition layer. It may route model requests, retrieve
-research, present source-aware context, retain authenticated conversations, and propose
-responses or actions. It does not grant authority, commit governed state, invoke protected
-tools, or issue authoritative receipts. Those responsibilities belong to Convertible Cranium Synapse
-and the canonical `cranium-kernel` authority boundary.
-
-Every response is associated with a versioned context envelope. The envelope binds a
-correlation identifier, policy version, request hash, source provenance, source authority
-classification, retrieval time, evidence class, uncertainty, and a SHA-256 content hash.
-Governed response receipts carry the envelope hash. Persisted assistant messages retain the
-correlation identifier and envelope hash for later review.
+- Conversational workspace with multi-model routing
+- Live research mode
+- GitHub grounding for the ecosystem
+- Source chips and freshness-aware context
+- Voice input/output
+- Authenticated conversation persistence
+- Dark WorthWyl interface
 
 ## Development
 
@@ -33,17 +31,6 @@ pnpm install
 pnpm dev
 ```
 
-Run validation and production builds with:
+## Ownership
 
-```bash
-pnpm run check
-pnpm test
-pnpm run build
-pnpm audit --audit-level high
-```
-
-The application uses the Manus WebDev full-stack template with React, tRPC, Express, Drizzle, and Manus authentication. Runtime configuration is supplied by the hosting environment; do not commit `.env` files or secrets.
-
-## Product direction
-
-Convertible Cranium is intended to become WorthWyl's real-world intelligence layer: a system that can reason across live knowledge, the Convertible Cranium substrate, user memory, governed tools, and future WorthWyl products while keeping provenance visible.
+© 2026 Wyl Mathes · WorthWyl Media. All rights reserved.
