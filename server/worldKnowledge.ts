@@ -7,7 +7,10 @@ export type WorldKnowledgeSource = {
   publishedAt?: string;
 };
 
-const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+const stripHtml = (value: string) => value
+  .replace(/<[^>]*>/g, "")
+  .replace(/&(amp|quot|#39|lt|gt);/g, entity => ({ amp: "&", quot: "\"", "#39": "'", lt: "<", gt: ">" }[entity.slice(1, -1)] ?? entity))
+  .trim();
 const tag = (xml: string, name: string) => {
   const match = xml.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`, "i"));
   return match ? stripHtml(match[1]) : "";
