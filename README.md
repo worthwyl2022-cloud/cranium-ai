@@ -23,8 +23,10 @@ and the canonical `cranium-kernel` authority boundary.
 Every response is associated with a versioned context envelope. The envelope binds a
 correlation identifier, policy version, request hash, source provenance, source authority
 classification, retrieval time, evidence class, uncertainty, and a SHA-256 content hash.
-Governed response receipts carry the envelope hash. Persisted assistant messages retain the
-correlation identifier and envelope hash for later review.
+The AI release-governance receipt records whether the application released or blocked the
+provider proposal. It is local release evidence, not a Cranium authority receipt, and always
+carries `authorityState: PROPOSED`. Only the Cranium Kernel may create constitutional
+authority or canonical authority receipts.
 
 ## Development
 

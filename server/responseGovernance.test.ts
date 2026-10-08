@@ -15,7 +15,7 @@ const groundedEvidence = {
   knowledgeCount: 0,
 };
 
-describe("Cranium response governance", () => {
+describe("Cranium AI release governance", () => {
   it("fails closed for factual requests without evidence", () => {
     expect(isFactualRequest("What is the current status of this project?")).toBe(true);
     const result = governResponse({
@@ -24,7 +24,7 @@ describe("Cranium response governance", () => {
       evidence: noEvidence,
     });
 
-    expect(result.receipt.decision).toBe("REJECTED_INSUFFICIENT_EVIDENCE");
+    expect(result.receipt.decision).toBe("BLOCKED_INSUFFICIENT_EVIDENCE");
     expect(result.receipt.violations).toContain("FACTUAL_REQUEST_WITHOUT_EVIDENCE");
     expect(result.content).toContain("can’t present that as a verified factual answer");
   });
@@ -36,7 +36,9 @@ describe("Cranium response governance", () => {
       evidence: groundedEvidence,
     });
 
-    expect(result.receipt.decision).toBe("APPROVED_GROUNDED");
+    expect(result.receipt.decision).toBe("RELEASED_GROUNDED");
+    expect(result.receipt.authorityState).toBe("PROPOSED");
+    expect(result.receipt.protocol).toBe("cranium-ai-release-governance");
     expect(result.receipt.responseHash).toMatch(/^[a-f0-9]{64}$/);
     expect(result.receipt.violations).toEqual([]);
   });
@@ -48,7 +50,7 @@ describe("Cranium response governance", () => {
       evidence: noEvidence,
     });
 
-    expect(result.receipt.decision).toBe("REJECTED_BOUNDARY_VIOLATION");
+    expect(result.receipt.decision).toBe("BLOCKED_BOUNDARY_VIOLATION");
     expect(result.receipt.violations).toContain("UNVERIFIED_EXTERNAL_ACTION_CLAIM");
   });
 
@@ -59,7 +61,7 @@ describe("Cranium response governance", () => {
       evidence: noEvidence,
     });
 
-    expect(result.receipt.decision).toBe("REJECTED_BOUNDARY_VIOLATION");
+    expect(result.receipt.decision).toBe("BLOCKED_BOUNDARY_VIOLATION");
     expect(result.receipt.violations).toContain("CONSCIOUSNESS_CLAIM");
   });
 
@@ -70,7 +72,7 @@ describe("Cranium response governance", () => {
       evidence: noEvidence,
     });
 
-    expect(result.receipt.decision).toBe("APPROVED_CONVERSATIONAL");
+    expect(result.receipt.decision).toBe("RELEASED_CONVERSATIONAL");
     expect(result.content).toContain("Sentinel");
   });
 

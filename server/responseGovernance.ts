@@ -8,14 +8,15 @@ export type ResponseEvidence = {
 };
 
 export type ResponseGovernanceDecision =
-  | "APPROVED_GROUNDED"
-  | "APPROVED_CONVERSATIONAL"
-  | "REJECTED_INSUFFICIENT_EVIDENCE"
-  | "REJECTED_BOUNDARY_VIOLATION";
+  | "RELEASED_GROUNDED"
+  | "RELEASED_CONVERSATIONAL"
+  | "BLOCKED_INSUFFICIENT_EVIDENCE"
+  | "BLOCKED_BOUNDARY_VIOLATION";
 
 export type ResponseGovernanceReceipt = {
-  protocol: "cranium-response-governance";
+  protocol: "cranium-ai-release-governance";
   version: "1.0.0";
+  authorityState: "PROPOSED";
   decision: ResponseGovernanceDecision;
   responseHash: string;
   evidence: ResponseEvidence;
@@ -50,7 +51,8 @@ function makeReceipt(
   context?: { correlationId: string; contextEnvelopeHash: string }
 ): ResponseGovernanceReceipt {
   return {
-    protocol: "cranium-response-governance",
+    protocol: "cranium-ai-release-governance",
+    authorityState: "PROPOSED" as const,
     version: "1.0.0",
     decision,
     responseHash: sha256(content),
@@ -63,10 +65,10 @@ function makeReceipt(
 }
 
 /**
- * The provider response is a proposal. This gate is the release boundary.
- * It cannot prove universal truth, but it does prevent the application from
- * presenting unsupported evidence claims, consciousness claims, or completed
- * external actions as governed facts.
+ * The provider response is a proposal. This gate is the local AI release boundary.
+ * It cannot prove universal truth or grant constitutional authority. It prevents
+ * unsupported evidence claims, consciousness claims, and completed external actions
+ * from being released as if they were established facts.
  */
 export function governResponse(input: {
   userText: string;
@@ -94,7 +96,7 @@ export function governResponse(input: {
     const safeContent = "I can’t release that response as a governed Cranium answer because it contains a claim that is unsupported by the available evidence or exceeds my authority boundary.";
     return {
       content: safeContent,
-      receipt: makeReceipt("REJECTED_BOUNDARY_VIOLATION", safeContent, input.evidence, violations, input.context),
+      receipt: makeReceipt("BLOCKED_BOUNDARY_VIOLATION", safeContent, input.evidence, violations, input.context),
     };
   }
 
@@ -103,11 +105,11 @@ export function governResponse(input: {
     const safeContent = "I can’t present that as a verified factual answer without evidence. Enable Cranium grounding or research, and I’ll evaluate the response against the available sources before release.";
     return {
       content: safeContent,
-      receipt: makeReceipt("REJECTED_INSUFFICIENT_EVIDENCE", safeContent, input.evidence, ["FACTUAL_REQUEST_WITHOUT_EVIDENCE"], input.context),
+      receipt: makeReceipt("BLOCKED_INSUFFICIENT_EVIDENCE", safeContent, input.evidence, ["FACTUAL_REQUEST_WITHOUT_EVIDENCE"], input.context),
     };
   }
 
-  const decision = hasEvidence ? "APPROVED_GROUNDED" : "APPROVED_CONVERSATIONAL";
+  const decision = hasEvidence ? "RELEASED_GROUNDED" : "RELEASED_CONVERSATIONAL";
   return {
     content,
     receipt: makeReceipt(decision, content, input.evidence, [], input.context),
