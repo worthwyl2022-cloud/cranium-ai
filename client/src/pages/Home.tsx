@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { Streamdown } from "streamdown";
 import {
+  Activity,
   ArrowUp,
   BookOpen,
   ChevronDown,
@@ -25,6 +26,7 @@ import {
   Plus,
   Search,
   Settings2,
+  Shield,
   Sparkles,
   UserRound,
   Volume2,
@@ -81,11 +83,21 @@ type BrowserRecognition = {
   stop: () => void;
 };
 
-const starterPrompts = [
-  "What can you help me build today?",
-  "Explain the Cranium substrate in plain language.",
-  "Help me turn an idea into a WorthWyl product.",
-];
+const IS_COMMANDER_SURFACE =
+  import.meta.env.VITE_CRANIUM_SURFACE === "commander" ||
+  new URLSearchParams(window.location.search).get("surface") === "commander";
+
+const starterPrompts = IS_COMMANDER_SURFACE
+  ? [
+      "Give me a guided tour of Convertible Cranium Commander.",
+      "Explain how cognition and authority are separated.",
+      "Show me how Kernel, Synapse, Memory, and Safety fit together.",
+    ]
+  : [
+      "What can you help me build today?",
+      "Explain the Convertible Cranium substrate in plain language.",
+      "Help me turn an idea into a WorthWyl product.",
+    ];
 
 const pronunciationDictionary: Array<[RegExp, string]> = [
   [/\bWorthWyl\b/gi, "Worth while"],
@@ -148,8 +160,9 @@ function speechChunks(text: string): string[] {
 const defaultMessages: ChatMessage[] = [
   {
     role: "assistant",
-    content:
-      "Welcome to **Cranium AI**. I’m the general intelligence layer presented by WorthWyl — ready for conversation, research, coding, creative work, and whatever you’re building next.\n\nAsk me anything, or choose a starting point below.",
+    content: IS_COMMANDER_SURFACE
+      ? "Welcome to **Convertible Cranium Commander**. I’m the native intelligence interface for Convertible Cranium Commander. I can guide you through the environment, explain the Convertible Cranium architecture, answer questions, and help coordinate governed work.\n\nI can propose and explain. Canonical authority remains with Convertible Cranium Kernel.\n\nChoose a starting point below, or ask me anything."
+      : "Welcome to **Convertible Cranium AI**. I’m the general intelligence layer presented by WorthWyl — ready for conversation, research, coding, creative work, and whatever you’re building next.\n\nAsk me anything, or choose a starting point below.",
     model: "gpt-5-mini",
   },
 ];
@@ -220,7 +233,7 @@ export default function Home() {
   const voiceStorageKey = `cranium-voice:${user?.openId ?? "guest"}`;
 
   const models = modelsQuery.data ?? [
-    { id: "auto", label: "Auto", provider: "Cranium", note: "Routes by task" },
+    { id: "auto", label: "Auto", provider: "Convertible Cranium", note: "Routes by task" },
     {
       id: "gpt-5-mini",
       label: "GPT-5 mini",
@@ -335,6 +348,7 @@ export default function Home() {
         model,
         grounded,
         research: researchMode,
+        surface: IS_COMMANDER_SURFACE ? "commander" : "cranium",
         messages: nextMessages.map(
           ({
             role,
@@ -543,7 +557,7 @@ export default function Home() {
   };
 
   return (
-    <div className="cranium-app min-h-screen overflow-hidden bg-[#101318] text-[#f4f0e8]">
+    <div className={`cranium-app min-h-screen overflow-hidden bg-[#101318] text-[#f4f0e8] ${IS_COMMANDER_SURFACE ? "commander-app" : ""}`}>
       <header className="cranium-topbar flex h-[74px] items-center justify-between border-b border-white/10 px-4 md:px-7">
         <div className="flex items-center gap-3">
           <button
@@ -561,14 +575,14 @@ export default function Home() {
           </div>
           <div className="leading-none">
             <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#a8b5b0]">
-              WorthWyl presents
+              {IS_COMMANDER_SURFACE ? "Convertible Cranium" : "WorthWyl presents"}
             </div>
             <div className="mt-1 font-display text-[21px] tracking-[-0.04em] text-[#f8f2e7]">
-              Cranium <span className="text-[#ffc857]">AI</span>
+              {IS_COMMANDER_SURFACE ? <>Commander <span className="text-[#ffc857]">OS</span></> : <>Cranium <span className="text-[#ffc857]">AI</span></>}
             </div>
           </div>
           <Badge className="ml-2 hidden border border-[#ffc857]/20 bg-[#ffc857]/10 font-mono text-[9px] uppercase tracking-[0.15em] text-[#ffc857] sm:inline-flex">
-            Private beta
+            {IS_COMMANDER_SURFACE ? "Commander profile" : "Private beta"}
           </Badge>
         </div>
         <div className="flex items-center gap-2">
@@ -708,7 +722,7 @@ export default function Home() {
             <div className="mb-3 flex items-center gap-2 text-[#ffc857]">
               <Cpu size={16} />
               <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
-                Cranium layer
+                {IS_COMMANDER_SURFACE ? "Convertible Cranium Commander layer" : "Convertible Cranium AI layer"}
               </span>
             </div>
             <p className="text-xs leading-relaxed text-[#9eaca4]">
@@ -733,21 +747,21 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-display text-[18px] tracking-[-0.03em] text-[#f2ede4]">
-                  Cranium AI
+                  {IS_COMMANDER_SURFACE ? "Commander" : "Convertible Cranium AI"}
                 </h1>
                 <span className="h-1.5 w-1.5 rounded-full bg-[#ffc857] shadow-[0_0_12px_#ffc857]" />
               </div>
               <div className="mt-1 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-[#718078]">
                 <span>{statusLabel}</span>
                 <span className="text-white/20">/</span>
-                <span>{currentMode} mode</span>
+                <span>{IS_COMMANDER_SURFACE ? "Commander" : `${currentMode} mode`}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 className="icon-button"
                 onClick={() => setShowLayer(value => !value)}
-                aria-label="Toggle Cranium layer"
+                aria-label="Toggle Convertible Cranium AI layer"
               >
                 <PanelRight size={17} />
               </button>
@@ -758,6 +772,34 @@ export default function Home() {
           </div>
           <div className="chat-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-8 md:px-8">
             <div className="mx-auto max-w-[780px]">
+              {IS_COMMANDER_SURFACE && (
+                <div className="mb-7 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    [Activity, "Command", "Native host surface", "ACTIVE"],
+                    [Sparkles, "Cognition", "Convertible Cranium AI runtime", "AVAILABLE"],
+                    [Shield, "Authority", "cranium-kernel", "EXTERNAL"],
+                    [Search, "Evidence", "Synapse assessment plane", "BOUND"],
+                    [BookOpen, "Continuity", "Miracle Memory", "PLANE"],
+                    [Zap, "Safety", "Session Circuit Breaker", "GUARDED"],
+                  ].map(([Icon, label, detail, state]) => {
+                    const SystemIcon = Icon as typeof Activity;
+                    return (
+                      <div key={String(label)} className="commander-system-card">
+                        <div className="commander-system-icon">
+                          <SystemIcon size={15} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#73817b]">{String(label)}</span>
+                            <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[#ffc857]">{String(state)}</span>
+                          </div>
+                          <div className="mt-1 truncate text-[11px] text-[#c5cec8]">{String(detail)}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="mb-9 flex items-center gap-4">
                 <div className="hero-orbit">
                   <img
@@ -767,10 +809,10 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8d9a95]">
-                    WorthWyl intelligence workspace
+                    {IS_COMMANDER_SURFACE ? "Convertible Cranium operating environment" : "WorthWyl intelligence workspace"}
                   </div>
                   <div className="mt-1 text-sm text-[#c7cec9]">
-                    One place to think, make, and move forward.
+                    {IS_COMMANDER_SURFACE ? "One environment to explore, understand, and operate Cranium." : "One place to think, make, and move forward."}
                   </div>
                 </div>
               </div>
@@ -957,7 +999,7 @@ export default function Home() {
                       void sendMessage(draft);
                     }
                   }}
-                  placeholder="Message Cranium AI..."
+                  placeholder={IS_COMMANDER_SURFACE ? "Talk to Convertible Cranium Commander..." : "Message Convertible Cranium AI..."}
                   className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0"
                   disabled={isSending || uploadMutation.isPending}
                 />
@@ -1167,7 +1209,7 @@ export default function Home() {
                 <div className="mb-2 flex items-center gap-2 text-[#ffc857]">
                   <Cpu size={15} />
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em]">
-                    Cranium layer
+                    Convertible Cranium AI layer
                   </span>
                 </div>
                 <h2 className="font-display text-[22px] tracking-[-0.04em]">
