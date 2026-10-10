@@ -89,13 +89,13 @@ const IS_COMMANDER_SURFACE =
 
 const starterPrompts = IS_COMMANDER_SURFACE
   ? [
-      "Give me a guided tour of Commander OS.",
+      "Give me a guided tour of Convertible Cranium Commander.",
       "Explain how cognition and authority are separated.",
       "Show me how Kernel, Synapse, Memory, and Safety fit together.",
     ]
   : [
       "What can you help me build today?",
-      "Explain the Cranium substrate in plain language.",
+      "Explain the Convertible Cranium substrate in plain language.",
       "Help me turn an idea into a WorthWyl product.",
     ];
 
@@ -161,8 +161,8 @@ const defaultMessages: ChatMessage[] = [
   {
     role: "assistant",
     content: IS_COMMANDER_SURFACE
-      ? "Welcome to **Commander**. I’m the native intelligence interface for Convertible Cranium Commander OS. I can guide you through the environment, explain the Cranium architecture, answer questions, and help coordinate governed work.\n\nI can propose and explain. Canonical authority remains with Cranium Kernel.\n\nChoose a starting point below, or ask me anything."
-      : "Welcome to **Cranium AI**. I’m the general intelligence layer presented by WorthWyl — ready for conversation, research, coding, creative work, and whatever you’re building next.\n\nAsk me anything, or choose a starting point below.",
+      ? "Welcome to **Convertible Cranium Commander**. I’m the native intelligence interface for Convertible Cranium Commander. I can guide you through the environment, explain the Convertible Cranium architecture, answer questions, and help coordinate governed work.\n\nI can propose and explain. Canonical authority remains with Convertible Cranium Kernel.\n\nChoose a starting point below, or ask me anything."
+      : "Welcome to **Convertible Cranium AI**. I’m the general intelligence layer presented by WorthWyl — ready for conversation, research, coding, creative work, and whatever you’re building next.\n\nAsk me anything, or choose a starting point below.",
     model: "gpt-5-mini",
   },
 ];
@@ -233,7 +233,7 @@ export default function Home() {
   const voiceStorageKey = `cranium-voice:${user?.openId ?? "guest"}`;
 
   const models = modelsQuery.data ?? [
-    { id: "auto", label: "Auto", provider: "Cranium", note: "Routes by task" },
+    { id: "auto", label: "Auto", provider: "Convertible Cranium", note: "Routes by task" },
     {
       id: "gpt-5-mini",
       label: "GPT-5 mini",
@@ -722,7 +722,7 @@ export default function Home() {
             <div className="mb-3 flex items-center gap-2 text-[#ffc857]">
               <Cpu size={16} />
               <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
-                {IS_COMMANDER_SURFACE ? "Commander layer" : "Cranium layer"}
+                {IS_COMMANDER_SURFACE ? "Convertible Cranium Commander layer" : "Convertible Cranium AI layer"}
               </span>
             </div>
             <p className="text-xs leading-relaxed text-[#9eaca4]">
@@ -747,21 +747,21 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-display text-[18px] tracking-[-0.03em] text-[#f2ede4]">
-                  {IS_COMMANDER_SURFACE ? "Commander" : "Cranium AI"}
+                  {IS_COMMANDER_SURFACE ? "Commander" : "Convertible Cranium AI"}
                 </h1>
                 <span className="h-1.5 w-1.5 rounded-full bg-[#ffc857] shadow-[0_0_12px_#ffc857]" />
               </div>
               <div className="mt-1 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-[#718078]">
                 <span>{statusLabel}</span>
                 <span className="text-white/20">/</span>
-                <span>{IS_COMMANDER_SURFACE ? "Commander OS" : `${currentMode} mode`}</span>
+                <span>{IS_COMMANDER_SURFACE ? "Commander" : `${currentMode} mode`}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 className="icon-button"
                 onClick={() => setShowLayer(value => !value)}
-                aria-label="Toggle Cranium layer"
+                aria-label="Toggle Convertible Cranium AI layer"
               >
                 <PanelRight size={17} />
               </button>
@@ -776,7 +776,7 @@ export default function Home() {
                 <div className="mb-7 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {[
                     [Activity, "Command", "Native host surface", "ACTIVE"],
-                    [Sparkles, "Cognition", "Cranium AI runtime", "AVAILABLE"],
+                    [Sparkles, "Cognition", "Convertible Cranium AI runtime", "AVAILABLE"],
                     [Shield, "Authority", "cranium-kernel", "EXTERNAL"],
                     [Search, "Evidence", "Synapse assessment plane", "BOUND"],
                     [BookOpen, "Continuity", "Miracle Memory", "PLANE"],
@@ -999,7 +999,7 @@ export default function Home() {
                       void sendMessage(draft);
                     }
                   }}
-                  placeholder={IS_COMMANDER_SURFACE ? "Talk to Commander..." : "Message Cranium AI..."}
+                  placeholder={IS_COMMANDER_SURFACE ? "Talk to Convertible Cranium Commander..." : "Message Convertible Cranium AI..."}
                   className="min-h-[68px] resize-none border-0 bg-transparent px-2 py-1 text-[14px] leading-6 text-[#f4f0e8] shadow-none placeholder:text-[#6d7873] focus-visible:ring-0"
                   disabled={isSending || uploadMutation.isPending}
                 />
@@ -1209,7 +1209,7 @@ export default function Home() {
                 <div className="mb-2 flex items-center gap-2 text-[#ffc857]">
                   <Cpu size={15} />
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em]">
-                    Cranium layer
+                    Convertible Cranium AI layer
                   </span>
                 </div>
                 <h2 className="font-display text-[22px] tracking-[-0.04em]">

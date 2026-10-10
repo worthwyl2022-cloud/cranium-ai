@@ -1,31 +1,31 @@
 # Convertible Cranium Canonical Architecture
 
-**Current canonical architecture:** Dual-Substrate / Quad-Engine  
-**Canonical authority:** Cranium Kernel  
+**Current canonical architecture:** Dual-Substrate / Quad-Engine
+**Canonical authority:** Convertible Cranium Kernel
 **Principle:** Cognition may come from anywhere. Authority comes only through Cranium.
 
 ## The authority path
 
 Convertible Cranium separates cognition from authority. Proposed cognition can originate from models, agents, users, tools, research, external systems, and applications. None of those sources can grant itself canonical authority.
 
-### Engine 1: Synapse
+### Engine 1: Convertible Cranium Synapse
 **Role:** proposal, bounded assessment, evidence capture, provenance, and context derivation.
 
-Synapse produces the proposal-side material and the D_A / D_B context projections used by the two authority substrates. Synapse is not the final authority issuer.
+Convertible Cranium Synapse produces the proposal-side material and the D_A / D_B context projections used by the two authority substrates. Synapse is not the final authority issuer.
 
 ### Engine 2A: Substrate A
-**Jury A1 + Jury A2**  
+**Jury A1 + Jury A2**
 **Question:** May We?
 
 Substrate A provides independent constitutional and policy reasoning. Its responsibility is whether a proposed action is permissible under the applicable constitutional and policy boundary.
 
 ### Engine 2B: Substrate B
-**Jury B1 + Jury B2**  
+**Jury B1 + Jury B2**
 **Question:** Is It So?
 
 Substrate B provides independent evidence grounding and factual or evidentiary assessment. Its responsibility is whether the proposal is adequately grounded in the evidence available to the system.
 
-### Engine 3: Cranium Kernel
+### Engine 3: Convertible Cranium Kernel
 **Role:** convergence authority.
 
 The Kernel receives the bounded proposal and the independent substrate results, verifies their bindings and lineage, checks the applicable Constitution A/B, Policy A/B, formula versions and signatures, and determines the canonical outcome. It is the sole canonical authority boundary.
@@ -38,13 +38,13 @@ The Quad-Engine is the authority path. It does not replace the rest of the syste
 
 **Listener** is the untrusted ingress boundary. Input entering from users, providers, external systems, or connected services is treated as untrusted data before cognition and evaluation.
 
-**Cranium AI** is the cognitive and orchestration layer. It can reason, propose, summarize, navigate, and prepare work. It does not become authoritative merely because it generated a result.
+**Convertible Cranium AI** is the cognitive and orchestration layer. It can reason, propose, summarize, navigate, and prepare work. It does not become authoritative merely because it generated a result.
 
-**Commander OS** is the operational surface. Commander coordinates sessions, applications, execution requests, and operator workflows. Surface ≠ throne. Authority-changing work must cross the Kernel boundary.
+**Convertible Cranium Commander** is the operational surface. Commander coordinates sessions, applications, execution requests, and operator workflows. Surface ≠ throne. Authority-changing work must cross the Kernel boundary.
 
 **Miracle Memory** is the governed continuity layer. Memory preserves context, provenance, lifecycle state, quarantine, and recovery information. A memory record does not become permission because it was remembered.
 
-**Circuit Breaker / COMA** is cross-cutting runtime containment and recovery. It can stop, contain, roll back, quarantine, and recover operational activity. It is not a competing authority engine.
+**Convertible Cranium COMA / Session Circuit Breaker** is cross-cutting runtime containment and recovery. It can stop, contain, roll back, quarantine, and recover operational activity. It is not a competing authority engine.
 
 **Receipts, attestation, and lineage** provide reconstructability. They bind the proposal, evidence, applicable versions, signatures, authority result, execution path, and recovery history so that a result can be examined rather than merely asserted.
 

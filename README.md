@@ -36,10 +36,10 @@ pnpm dev
 © 2026 Wyl Mathes · WorthWyl Media. All rights reserved.
 ## Commander surface
 
-Commander is a surface profile of the existing Convertible Cranium AI runtime. Set `VITE_CRANIUM_SURFACE=commander` for the Commander host experience. The same model routing, voice, grounding, memory, provenance, and response-governance paths remain in use; the server adds a Commander system profile that makes the AI the native guide/interface for Commander OS without granting it canonical authority.
+Convertible Cranium Commander is a surface profile of the existing Convertible Cranium AI runtime. Set `VITE_CRANIUM_SURFACE=commander` for the Convertible Cranium Commander host experience. The same model routing, voice, grounding, memory, provenance, and response-governance paths remain in use; the server adds a Commander system profile that makes the AI the native guide/interface for Convertible Cranium Commander without granting it canonical authority.
 
-Commander is intentionally not a second intelligence implementation. It is a role-bound operating surface over the same Cranium AI capabilities. Canonical authority remains `cranium-kernel`; the Commander profile may propose, explain, inspect, and guide, but it must not fabricate live Kernel state, receipts, grants, denials, deployments, or external actions.
+Convertible Cranium Commander is intentionally not a second intelligence implementation. It is a role-bound operating surface over the same Convertible Cranium AI capabilities. Canonical authority remains with the Convertible Cranium Kernel (repository: cranium-kernel); the Convertible Cranium Commander profile may propose, explain, inspect, and guide, but it must not fabricate live Kernel state, receipts, grants, denials, deployments, or external actions.
 
 ## ChromiumOS direction
 
-Commander OS is being designed as a Cranium-native operating environment that can run as a Chrome/ChromiumOS application surface first and deepen into a ChromiumOS integration later. The integration boundary is documented separately so the current web application remains usable and testable without requiring a full ChromiumOS source checkout.
+Convertible Cranium Commander is being designed as the native operator surface for the Convertible Cranium ecosystem that can run as a Chrome/ChromiumOS application surface first and deepen into a ChromiumOS integration later. The integration boundary is documented separately so the current web application remains usable and testable without requiring a full ChromiumOS source checkout.
